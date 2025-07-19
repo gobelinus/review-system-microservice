@@ -1,0 +1,68 @@
+#!/bin/sh
+set -e
+
+echo "Running pre-commit checks..."
+
+# Check if we're in a Maven project
+if [ ! -f "pom.xml" ]; then
+  echo "Error: No pom.xml found. Are you in the project root?"
+  exit 1
+fi
+
+# Get list of staged Java files
+STAGED_JAVA_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.java$" || true)
+
+if [ -z "$STAGED_JAVA_FILES" ]; then
+  echo "No Java files staged for commit."
+  exit 0
+fi
+
+echo "Found staged Java files:"
+echo "$STAGED_JAVA_FILES"
+
+# Run Google Java Format on staged files
+echo "Formatting Java files..."
+mvn fmt:format -q
+
+# Add formatted files back to staging
+for file in $STAGED_JAVA_FILES; do
+  if [ -f "$file" ]; then
+    git add "$file"
+  fi
+done
+
+# Run code quality checks
+echo "Running Checkstyle..."
+if ! mvn checkstyle:check -q; then
+  echo "❌ Checkstyle failed. Please fix issues before committing."
+  exit 1
+fi
+
+echo "Running Spotless..."
+if ! mvn spotless:check -q; then
+  echo "❌ SpotLess found issues. Please fix before committing."
+  exit 1
+fi
+
+echo "Running PMD..."
+if ! mvn pmd:check -q; then
+  echo "❌ PMD found issues. Please fix before committing."
+  exit 1
+fi
+
+# Run tests on affected modules
+echo "Running tests..."
+if ! mvn test -q; then
+  echo "❌ Tests failed. Please fix before committing."
+  exit 1
+fi
+
+# Update test case reports
+echo "Running tests..."
+if ! mvn jacoco:report -q; then
+  echo "❌ JaCoCo coverage report generation failed."
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
+echo "Pre-commit checks passed: formatting, linting, static analysis, tests, and coverage updated."
