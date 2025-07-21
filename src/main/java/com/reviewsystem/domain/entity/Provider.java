@@ -64,7 +64,7 @@ public class Provider {
   @Column(name = "api_endpoint", length = 255)
   @Size(max = 255, message = "API endpoint must not exceed 255 characters")
   @Pattern(
-      regexp = "^(https?://)?([a-zA-Z0-9.-]+)(:[0-9]+)?(/.*)?$",
+      regexp = "^(https?://)[a-zA-Z0-9.-]+(:[0-9]+)?(/.*)?$",
       message = "API endpoint must be a valid URL")
   private String apiEndpoint;
 

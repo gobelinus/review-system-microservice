@@ -140,7 +140,12 @@ class ProviderEntityTest {
     void shouldFailValidationWhenApiEndpointIsInvalidUrl() {
       // Given
       Provider provider =
-          Provider.builder().name("Agoda").code("AGODA").apiEndpoint("no-url").active(true).build();
+          Provider.builder()
+              .name("Agoda")
+              .code("AGODA")
+              .apiEndpoint("invalid-url")
+              .active(true)
+              .build();
 
       // When
       Set<ConstraintViolation<Provider>> violations = validator.validate(provider);
@@ -394,8 +399,8 @@ class ProviderEntityTest {
       // Then
       assertThat(toString).contains("Provider");
       assertThat(toString).contains("id=1");
-      assertThat(toString).contains("name=Agoda");
-      assertThat(toString).contains("code=AGODA");
+      assertThat(toString).contains("name='Agoda'");
+      assertThat(toString).contains("code='AGODA'");
       assertThat(toString).contains("active=true");
     }
   }
