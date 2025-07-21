@@ -239,7 +239,97 @@ class ProviderEntityTest {
   @Nested
   @DisplayName("Provider Relationships")
   class ProviderRelationships {
-    // ToDo: Build test cases
+
+    @Test
+    @DisplayName("Should manage reviews collection correctly")
+    void shouldManageReviewsCollectionCorrectly() {
+      // Given
+      Provider provider = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+
+      Review review1 =
+          Review.builder()
+              .externalId("ext-123")
+              .propertyId("prop-456")
+              .guestName("John Doe")
+              .rating(4.5)
+              .reviewText("Great hotel!")
+              .reviewDate(LocalDateTime.now().minusDays(1))
+              .language("en")
+              .build();
+
+      Review review2 =
+          Review.builder()
+              .externalId("ext-124")
+              .propertyId("prop-457")
+              .guestName("Jane Smith")
+              .rating(3.5)
+              .reviewText("Good experience")
+              .reviewDate(LocalDateTime.now().minusDays(2))
+              .language("en")
+              .build();
+
+      // When
+      provider.addReview(review1);
+      provider.addReview(review2);
+
+      // Then
+      assertThat(provider.getReviews()).hasSize(2);
+      assertThat(provider.getReviews()).contains(review1, review2);
+      assertThat(review1.getProvider()).isEqualTo(provider);
+      assertThat(review2.getProvider()).isEqualTo(provider);
+    }
+
+    @Test
+    @DisplayName("Should remove review correctly")
+    void shouldRemoveReviewCorrectly() {
+      // Given
+      Provider provider = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+
+      Review review =
+          Review.builder()
+              .externalId("ext-123")
+              .propertyId("prop-456")
+              .guestName("John Doe")
+              .rating(4.5)
+              .reviewText("Great hotel!")
+              .reviewDate(LocalDateTime.now().minusDays(1))
+              .language("en")
+              .build();
+
+      provider.addReview(review);
+
+      // When
+      provider.removeReview(review);
+
+      // Then
+      assertThat(provider.getReviews()).isEmpty();
+      assertThat(review.getProvider()).isNull();
+    }
+
+    @Test
+    @DisplayName("Should prevent duplicate reviews")
+    void shouldPreventDuplicateReviews() {
+      // Given
+      Provider provider = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+
+      Review review =
+          Review.builder()
+              .externalId("ext-123")
+              .propertyId("prop-456")
+              .guestName("John Doe")
+              .rating(4.5)
+              .reviewText("Great hotel!")
+              .reviewDate(LocalDateTime.now().minusDays(1))
+              .language("en")
+              .build();
+
+      // When
+      provider.addReview(review);
+      provider.addReview(review); // Adding same review again
+
+      // Then
+      assertThat(provider.getReviews()).hasSize(1);
+    }
   }
 
   @Nested
@@ -342,7 +432,8 @@ class ProviderEntityTest {
       // When
       provider.updateLastProcessedTimestamp();
 
-      // ToDo: Then
+      // Then
+      assertThat(provider.getLastProcessedAt()).isAfter(beforeUpdate);
     }
   }
 

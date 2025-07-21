@@ -158,8 +158,7 @@ public class Provider {
   /** Reviews associated with this provider */
   @OneToMany(mappedBy = "provider", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
   @Builder.Default
-  // ToDO: Make set of actual Review class
-  private Set<String> reviews = new LinkedHashSet<>();
+  private Set<Review> reviews = new LinkedHashSet<>();
 
   // Business Logic Methods
 
@@ -179,8 +178,11 @@ public class Provider {
       return 0.0;
     }
 
-    // ToDO: replace with logic from Review once Review is implemented
-    return 2.5;
+    return reviews.stream()
+        .filter(review -> review.getRating() != null)
+        .mapToDouble(Review::getRating)
+        .average()
+        .orElse(0.0);
   }
 
   /** Checks if the provider supports a specific language */
@@ -227,32 +229,52 @@ public class Provider {
     this.totalReviewsProcessed += reviewsProcessed;
   }
 
-  // ToDo: Relationship Management
+  // Relationship Management
+  /** Adds a review to this provider */
+  public void addReview(Review review) {
+    if (review == null) return;
+    // Set provider first, so hashCode/equals are stable before adding to set
+    if (review.getProvider() != this) {
+      review.setProvider(this);
+    }
+    // Now add to set if not already present
+    if (!reviews.contains(review)) {
+      reviews.add(review);
+    }
+  }
+
+  /** Removes a review from this provider */
+  public void removeReview(Review review) {
+    if (review != null && reviews.contains(review)) {
+      reviews.remove(review);
+      review.setProvider(null);
+    }
+  }
+
+  /** Clears all reviews (use with caution) */
+  public void clearReviews() {
+    reviews.forEach(review -> review.setProvider(null));
+    reviews.clear();
+  }
 
   // Standard Object Methods
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null || getClass() != obj.getClass()) return false;
-
-    Provider provider = (Provider) obj;
-
-    // Use business key (code) for equality if available
-    if (code != null && provider.code != null) {
-      return Objects.equals(code, provider.code);
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Provider provider = (Provider) o;
+    if (id != null && provider.id != null) {
+      return id.equals(provider.id);
     }
-
-    // Fallback to ID comparison
-    return Objects.equals(id, provider.id) && id != null;
+    // Fallback to business key if both ids are null
+    return code != null && code.equals(provider.code);
   }
 
   @Override
   public int hashCode() {
-    if (code != null) {
-      return Objects.hash(code);
-    }
-    return Objects.hash(id);
+    if (id != null) return id.hashCode();
+    return code != null ? code.hashCode() : 0;
   }
 
   @Override
