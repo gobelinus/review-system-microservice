@@ -1,4 +1,4 @@
-package com.reviewsystem.ReviewSystem;
+package com.reviewsystem;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
