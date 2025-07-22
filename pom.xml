@@ -101,6 +101,26 @@
 			<version>10.20.1</version>
 		</dependency>
 
+		<!-- AWS SDK for S3 -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>2.32.4</version> <!-- Use the latest version available -->
+		</dependency>
+
+		<!-- Spring Retry Dependency -->
+		<dependency>
+			<groupId>org.springframework.retry</groupId>
+			<artifactId>spring-retry</artifactId>
+			<version>2.0.12</version> <!-- Use the latest version available -->
+		</dependency>
+
+		<!-- Spring Boot Starter AOP for aspect-oriented programming -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
