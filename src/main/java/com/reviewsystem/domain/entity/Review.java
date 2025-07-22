@@ -65,7 +65,7 @@ public class Review {
   private String guestName;
 
   /** Rating score (normalized to 0.0-5.0 scale) */
-  @Column(name = "rating", nullable = false, precision = 3, scale = 2)
+  @Column(name = "rating", nullable = false)
   @NotNull(message = "Rating is required")
   @DecimalMin(value = "0.0", message = "Rating must be between 0.0 and 5.0")
   @DecimalMax(value = "5.0", message = "Rating must be between 0.0 and 5.0")

@@ -75,7 +75,7 @@ public class Provider {
   private Boolean active = true;
 
   /** Provider's rating scale (e.g., 5.0 for 1-5 scale, 10.0 for 1-10 scale) */
-  @Column(name = "rating_scale", precision = 3, scale = 1)
+  @Column(name = "rating_scale")
   @DecimalMin(value = "1.0", message = "Rating scale must be between 1.0 and 10.0")
   @DecimalMax(value = "10.0", message = "Rating scale must be between 1.0 and 10.0")
   @Builder.Default
