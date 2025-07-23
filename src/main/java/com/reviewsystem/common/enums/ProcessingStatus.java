@@ -1,47 +1,66 @@
 package com.reviewsystem.common.enums;
 
-/**
- * Stub for ProcessingStatus enum Represents the various states of file processing in the review
- * system.
- *
- * <p>This enum should represent: - Initial state when file is discovered - Processing in progress
- * state - Successful completion state - Various failure states - Retry states - Skipped/ignored
- * states
- *
- * <p>TODO: Implement the following: - All necessary status values - Description/display name for
- * each status - Methods to check if status is terminal (finished) - Methods to check if status
- * allows retry - Methods to get next possible statuses - Integration with database (JPA converter
- * if needed)
- */
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+/** Enumeration representing the processing status of files. */
+@Getter
+@RequiredArgsConstructor
 public enum ProcessingStatus {
 
-// TODO: Add PENDING status for files waiting to be processed
+  /** File processing has not started yet. */
+  PENDING("File is queued for processing"),
 
-// TODO: Add IN_PROGRESS status for files currently being processed
+  /** File processing is currently in progress. */
+  IN_PROGRESS("File processing is currently running"),
 
-// TODO: Add COMPLETED status for successfully processed files
+  /** File processing completed successfully. */
+  COMPLETED("File processing completed successfully"),
 
-// TODO: Add FAILED status for files that failed processing
+  /** File processing failed due to an error. */
+  FAILED("File processing failed"),
 
-// TODO: Add RETRY status for files that are being retried
+  /** File processing was cancelled or interrupted. */
+  CANCELLED("File processing was cancelled"),
 
-// TODO: Add SKIPPED status for files that were intentionally skipped
+  /** File processing was skipped (e.g., already processed). */
+  SKIPPED("File processing was skipped");
 
-// TODO: Add DUPLICATE status for files that were already processed
+  private final String description;
 
-// TODO: Add CORRUPTED status for files that are corrupted/unreadable
+  /**
+   * Checks if the status represents a terminal state (processing is finished).
+   *
+   * @return true if the status is terminal, false otherwise
+   */
+  public boolean isTerminal() {
+    return this == COMPLETED || this == FAILED || this == CANCELLED || this == SKIPPED;
+  }
 
-// TODO: Add description field for each enum value
+  /**
+   * Checks if the status represents an active processing state.
+   *
+   * @return true if processing is active, false otherwise
+   */
+  public boolean isActive() {
+    return this == IN_PROGRESS;
+  }
 
-// TODO: Add constructor to initialize description
+  /**
+   * Checks if the status represents a successful completion.
+   *
+   * @return true if processing was successful, false otherwise
+   */
+  public boolean isSuccessful() {
+    return this == COMPLETED;
+  }
 
-// TODO: Add getter method for description
-
-// TODO: Add isTerminal() method to check if status is final
-
-// TODO: Add isRetryable() method to check if status allows retry
-
-// TODO: Add canTransitionTo() method to validate status transitions
-
-// TODO: Add getDisplayName() method for UI representation
+  /**
+   * Checks if the status represents a failure state.
+   *
+   * @return true if processing failed, false otherwise
+   */
+  public boolean isFailed() {
+    return this == FAILED;
+  }
 }
