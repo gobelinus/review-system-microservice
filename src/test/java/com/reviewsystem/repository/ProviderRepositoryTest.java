@@ -16,7 +16,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
-@ActiveProfiles("test")
+@ActiveProfiles("test-postgres")
 @DisplayName("ProviderRepository Unit Tests")
 class ProviderRepositoryTest {
 

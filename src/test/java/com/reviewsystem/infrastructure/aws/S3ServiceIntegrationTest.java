@@ -35,7 +35,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 // @SpringBootTest(classes = ReviewSystemMicroserviceApplication.class)
 @Testcontainers
-@ActiveProfiles("test")
+@ActiveProfiles("test-postgres")
 @Execution(ExecutionMode.SAME_THREAD)
 class S3ServiceIntegrationTest {
 
@@ -53,9 +53,9 @@ class S3ServiceIntegrationTest {
   static void configureProperties(DynamicPropertyRegistry registry) {
     registry.add("aws.s3.endpoint", () -> localstack.getEndpointOverride(S3).toString());
     registry.add("aws.s3.region", () -> localstack.getRegion());
-    registry.add("aws.s3.access-key", () -> localstack.getAccessKey());
-    registry.add("aws.s3.secret-key", () -> localstack.getSecretKey());
-    registry.add("aws.s3.bucket-name", () -> BUCKET_NAME);
+    registry.add("aws.s3.accessKey", () -> localstack.getAccessKey());
+    registry.add("aws.s3.secretKey", () -> localstack.getSecretKey());
+    registry.add("aws.s3.bucketName", () -> BUCKET_NAME);
     registry.add("aws.s3.prefix", () -> PREFIX);
     registry.add("aws.s3.path-style-access", () -> "true");
   }

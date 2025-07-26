@@ -22,7 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
-@ActiveProfiles("test")
+@ActiveProfiles("test-postgres")
 @DisplayName("ReviewRepository Unit Tests")
 class ReviewRepositoryTest {
 
@@ -532,7 +532,14 @@ class ReviewRepositoryTest {
             .build();
 
     assertThatThrownBy(() -> reviewRepository.saveAndFlush(duplicateReview))
-        .hasRootCauseInstanceOf(org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException.class);
+        .satisfiesAnyOf(
+            throwable ->
+                assertThat(throwable)
+                    .hasRootCauseInstanceOf(
+                        org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException.class),
+            throwable ->
+                assertThat(throwable)
+                    .hasRootCauseInstanceOf(org.postgresql.util.PSQLException.class));
   }
 
   @Test

@@ -13,7 +13,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 /**
- * Provider entity representing external review data sources Supports multiple providers with
+ * provider entity representing external review data sources Supports multiple providers with
  * different configurations and rating scales
  */
 @Entity
@@ -42,20 +42,20 @@ public class Provider {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /** Provider display name */
+  /** provider display name */
   @Column(name = "name", nullable = false, length = 100)
-  @NotBlank(message = "Provider name is required")
-  @Size(max = 100, message = "Provider name must not exceed 100 characters")
+  @NotBlank(message = "provider name is required")
+  @Size(max = 100, message = "provider name must not exceed 100 characters")
   private String name;
 
   /** Unique provider code (uppercase) */
   @Column(name = "code", nullable = false, length = 10)
-  @NotBlank(message = "Provider code is required")
-  @Size(min = 2, max = 10, message = "Provider code must be between 2 and 10 characters")
-  @Pattern(regexp = "^[A-Z]+$", message = "Provider code must be uppercase letters only")
+  @NotBlank(message = "provider code is required")
+  @Size(min = 2, max = 10, message = "provider code must be between 2 and 10 characters")
+  @Pattern(regexp = "^[A-Z]+$", message = "provider code must be uppercase letters only")
   private String code;
 
-  /** Provider description */
+  /** provider description */
   @Column(name = "description", length = 500)
   @Size(max = 500, message = "Description must not exceed 500 characters")
   private String description;
@@ -74,7 +74,7 @@ public class Provider {
   @Builder.Default
   private Boolean active = true;
 
-  /** Provider's rating scale (e.g., 5.0 for 1-5 scale, 10.0 for 1-10 scale) */
+  /** provider's rating scale (e.g., 5.0 for 1-5 scale, 10.0 for 1-10 scale) */
   @Column(name = "rating_scale")
   @DecimalMin(value = "1.0", message = "Rating scale must be between 1.0 and 10.0")
   @DecimalMax(value = "10.0", message = "Rating scale must be between 1.0 and 10.0")
@@ -234,8 +234,8 @@ public class Provider {
   public void addReview(Review review) {
     if (review == null) return;
     // Set provider first, so hashCode/equals are stable before adding to set
-    if (review.getProvider() != this) {
-      review.setProvider(this);
+    if (review.getprovider() != this) {
+      review.setprovider(this);
     }
     // Now add to set if not already present
     if (!reviews.contains(review)) {
@@ -247,13 +247,13 @@ public class Provider {
   public void removeReview(Review review) {
     if (review != null && reviews.contains(review)) {
       reviews.remove(review);
-      review.setProvider(null);
+      review.setprovider(null);
     }
   }
 
   /** Clears all reviews (use with caution) */
   public void clearReviews() {
-    reviews.forEach(review -> review.setProvider(null));
+    reviews.forEach(review -> review.setprovider(null));
     reviews.clear();
   }
 
@@ -263,7 +263,7 @@ public class Provider {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    Provider provider = (Provider) o;
+    provider provider = (provider) o;
     if (id != null && provider.id != null) {
       return id.equals(provider.id);
     }
@@ -280,7 +280,7 @@ public class Provider {
   @Override
   public String toString() {
     return String.format(
-        "Provider{id=%d, name='%s', code='%s', active=%s, ratingScale=%.1f, reviewCount=%d}",
+        "provider{id=%d, name='%s', code='%s', active=%s, ratingScale=%.1f, reviewCount=%d}",
         id, name, code, active, ratingScale, getTotalReviewCount());
   }
 }

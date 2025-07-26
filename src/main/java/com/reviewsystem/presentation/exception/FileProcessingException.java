@@ -1,53 +1,50 @@
 package com.reviewsystem.presentation.exception;
 
 /**
- * Stub for FileProcessingException Custom exception for handling file processing related errors in
- * the review system.
- *
- * <p>This exception should be thrown when: - S3 file retrieval fails - File parsing errors occur -
- * File validation failures happen - File processing pipeline encounters errors
- *
- * <p>TODO: Implement the following: - Multiple constructors for different error scenarios - Error
- * codes for categorizing different types of file processing errors - Support for nested exceptions
- * - Integration with global exception handler - Proper logging context
+ * Exception thrown when file processing operations fail. This includes S3 operations, file parsing,
+ * and data validation failures.
  */
 public class FileProcessingException extends RuntimeException {
 
-  // TODO: Add serial version UID
-
-  // TODO: Add error code field for categorizing exceptions
-
-  // TODO: Add file path/name field for context
-
-  // TODO: Add default constructor
-
   /**
-   * Constructor with message
+   * Constructs a new FileProcessingException with the specified detail message.
    *
-   * @param message the error message
+   * @param message the detail message
    */
   public FileProcessingException(String message) {
     super(message);
   }
 
   /**
-   * Constructor with message and cause
+   * Constructs a new FileProcessingException with the specified detail message and cause.
    *
-   * @param message the error message
-   * @param cause the underlying cause
+   * @param message the detail message
+   * @param cause the cause of the exception
    */
   public FileProcessingException(String message, Throwable cause) {
     super(message, cause);
   }
-  // TODO: Add constructor with error code and message
 
-  // TODO: Add constructor with error code, message, and cause
+  /**
+   * Constructs a new FileProcessingException with the specified cause.
+   *
+   * @param cause the cause of the exception
+   */
+  public FileProcessingException(Throwable cause) {
+    super(cause);
+  }
 
-  // TODO: Add constructor with file path, error code, message, and cause
-
-  // TODO: Add getter methods for error code and file path
-
-  // TODO: Add method to create formatted error message
-
-  // TODO: Override toString() for better error reporting
+  /**
+   * Constructs a new FileProcessingException with the specified detail message, cause, suppression
+   * enabled or disabled, and writable stack trace enabled or disabled.
+   *
+   * @param message the detail message
+   * @param cause the cause of the exception
+   * @param enableSuppression whether or not suppression is enabled
+   * @param writableStackTrace whether or not the stack trace should be writable
+   */
+  public FileProcessingException(
+      String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
+  }
 }

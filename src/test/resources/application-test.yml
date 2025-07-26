@@ -25,6 +25,33 @@ spring:
     console:
       enabled: true
 
+# AWS Configuration for LocalStack
+aws:
+  s3:
+    bucketName: test-reviews-bucket
+    region: us-east-1
+    prefix: reviews/
+    accessKey: test
+    secretKey: test
+    max-retries: 3
+    retry-delay-ms: 100 # Faster retries for tests
+    connection-timeout: PT5S # 5 seconds
+    read-timeout: PT10S # 10 seconds
+    path-style-access: true
+    endpoint: # Will be overridden by @DynamicPropertySource
+# Retry configuration
+spring.retry:
+  enabled: true
+
+# Test-specific configurations
+test:
+  s3:
+    test-data-path: "classpath:test-data/"
+    sample-files:
+      - "sample-reviews.jl"
+      - "malformed-reviews.jl"
+      - "large-reviews.jl"
+
 logging:
   level:
     org.hibernate.SQL: DEBUG

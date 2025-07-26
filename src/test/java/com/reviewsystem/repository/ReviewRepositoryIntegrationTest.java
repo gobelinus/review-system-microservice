@@ -53,8 +53,16 @@ class ReviewRepositoryIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    reviewRepository.deleteAll();
-    providerRepository.deleteAll();
+    try {
+      reviewRepository.deleteAll();
+    } catch (Exception e) {
+      // pass
+    }
+    try {
+      providerRepository.deleteAll();
+    } catch (Exception e) {
+      // pass
+    }
     testProvider =
         Provider.builder()
             .code("AGODA")
