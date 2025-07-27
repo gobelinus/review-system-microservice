@@ -1,6 +1,12 @@
 package com.reviewsystem.domain.entity;
 
 import com.reviewsystem.common.enums.ProcessingStatus;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,28 +15,21 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
-import java.time.LocalDateTime;
-
-/**
- * Entity to track processed files from S3 to ensure idempotent processing
- */
+/** Entity to track processed files from S3 to ensure idempotent processing */
 @Entity
-@Table(name = "processed_files",
-        indexes = {
-                @Index(name = "idx_processed_files_s3_key", columnList = "s3_key"),
-                @Index(name = "idx_processed_files_status", columnList = "processing_status"),
-                @Index(name = "idx_processed_files_created_at", columnList = "created_at"),
-                @Index(name = "idx_processed_files_last_modified", columnList = "last_modified_date")
-        },
-        uniqueConstraints = {
-                @UniqueConstraint(name = "uk_processed_files_s3_key_etag",
-                        columnNames = {"s3_key", "etag"})
-        })
+@Table(
+    name = "processed_files",
+    indexes = {
+      @Index(name = "idx_processed_files_s3_key", columnList = "s3_key"),
+      @Index(name = "idx_processed_files_status", columnList = "processing_status"),
+      @Index(name = "idx_processed_files_created_at", columnList = "created_at"),
+      @Index(name = "idx_processed_files_last_modified", columnList = "last_modified_date")
+    },
+    uniqueConstraints = {
+      @UniqueConstraint(
+          name = "uk_processed_files_s3_key_etag",
+          columnNames = {"s3_key", "etag"})
+    })
 @Data
 @Builder
 @NoArgsConstructor
@@ -72,6 +71,9 @@ public class ProcessedFile {
   @Column(name = "records_failed")
   private Integer recordsFailed;
 
+  @Column(name = "records_skipped")
+  private Integer recordsSkipped;
+
   @Column(name = "error_message", length = 2000)
   private String errorMessage;
 
@@ -94,39 +96,29 @@ public class ProcessedFile {
   @Column(name = "processing_completed_at")
   private LocalDateTime processingCompletedAt;
 
-  /**
-   * Business logic method to check if file was already processed successfully
-   */
+  /** Business logic method to check if file was already processed successfully */
   public boolean isSuccessfullyProcessed() {
     return ProcessingStatus.COMPLETED.equals(this.processingStatus);
   }
 
-  /**
-   * Business logic method to check if file processing failed
-   */
+  /** Business logic method to check if file processing failed */
   public boolean isProcessingFailed() {
     return ProcessingStatus.FAILED.equals(this.processingStatus);
   }
 
-  /**
-   * Business logic method to check if file is currently being processed
-   */
+  /** Business logic method to check if file is currently being processed */
   public boolean isProcessing() {
     return ProcessingStatus.IN_PROGRESS.equals(this.processingStatus);
   }
 
-  /**
-   * Business logic method to mark processing as started
-   */
+  /** Business logic method to mark processing as started */
   public void markProcessingStarted() {
     this.processingStatus = ProcessingStatus.IN_PROGRESS;
     this.processingStartedAt = LocalDateTime.now();
     this.errorMessage = null;
   }
 
-  /**
-   * Business logic method to mark processing as completed
-   */
+  /** Business logic method to mark processing as completed */
   public void markProcessingCompleted(int recordsProcessed, int recordsFailed) {
     this.processingStatus = ProcessingStatus.COMPLETED;
     this.processingCompletedAt = LocalDateTime.now();
@@ -135,35 +127,29 @@ public class ProcessedFile {
     this.errorMessage = null;
   }
 
-  /**
-   * Business logic method to mark processing as failed
-   */
+  /** Business logic method to mark processing as failed */
   public void markProcessingFailed(String errorMessage) {
     this.processingStatus = ProcessingStatus.FAILED;
     this.processingCompletedAt = LocalDateTime.now();
-    this.errorMessage = errorMessage != null && errorMessage.length() > 2000
+    this.errorMessage =
+        errorMessage != null && errorMessage.length() > 2000
             ? errorMessage.substring(0, 2000)
             : errorMessage;
   }
 
-  /**
-   * Business logic method to calculate processing duration
-   */
+  /** Business logic method to calculate processing duration */
   public Long getProcessingDurationMillis() {
     if (processingStartedAt == null) {
       return null;
     }
 
-    LocalDateTime endTime = processingCompletedAt != null
-            ? processingCompletedAt
-            : LocalDateTime.now();
+    LocalDateTime endTime =
+        processingCompletedAt != null ? processingCompletedAt : LocalDateTime.now();
 
     return java.time.Duration.between(processingStartedAt, endTime).toMillis();
   }
 
-  /**
-   * Business logic method to check if file is duplicate based on S3 key and ETag
-   */
+  /** Business logic method to check if file is duplicate based on S3 key and ETag */
   public boolean isDuplicateOf(String s3Key, String etag) {
     return this.s3Key.equals(s3Key) && this.etag.equals(etag);
   }

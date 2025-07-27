@@ -1,0 +1,71 @@
+# Test configuration for PostgreSQL profile
+spring:
+  profiles:
+    active: test-postgres
+
+  # Database configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/reviewsystem_test
+    username: test_user
+    password: test_password
+    driver-class-name: org.postgresql.Driver
+
+  # JPA configuration
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    defer-datasource-initialization: true
+
+  # Flyway configuration (disabled for tests)
+  flyway:
+    enabled: false
+
+# Application-specific configuration
+app:
+  # Scheduling configuration
+  scheduling:
+    review-processing:
+      interval: 60000  # 1 minute for testing
+    cleanup:
+      cron: "0 */5 * * * ?"  # Every 5 minutes for testing
+    thread-pool:
+      size: 2
+      prefix: "test-scheduler-"
+    lock:
+      ttl: 300000  # 5 minutes for testing
+
+  # Processing configuration
+  processing:
+    thread-pool:
+      core-size: 2
+      max-size: 4
+      queue-capacity: 10
+    concurrent:
+      enabled: true
+    cleanup:
+      retention-days: 1  # 1 day for testing
+
+  # S3 configuration (for testing with LocalStack)
+  aws:
+    s3:
+      bucket-name: test-reviews-bucket
+      region: us-east-1
+      endpoint: http://localhost:4566  # LocalStack endpoint
+      path-prefix: reviews/
+    credentials:
+      access-key: test
+      secret-key: test
+
+# Logging configuration
+logging:
+  level:
+    com.reviewsystem: DEBUG
+    org.springframework.scheduling: DEBUG
+    org.springframework.integration: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

@@ -17,15 +17,16 @@ import org.hibernate.annotations.UpdateTimestamp;
     name = "reviews",
     uniqueConstraints = {
       @UniqueConstraint(
-          columnNames = {"external_id", "provider_id"},
-          name = "uk_review_external_provider")
+          columnNames = {"provider_review_id", "provider_id"},
+          name = "uk_review_provider_external")
     },
     indexes = {
-      @Index(name = "idx_review_property_id", columnList = "property_id"),
+      @Index(name = "idx_review_hotel_id", columnList = "hotel_id"),
       @Index(name = "idx_review_rating", columnList = "rating"),
       @Index(name = "idx_review_date", columnList = "review_date"),
       @Index(name = "idx_review_language", columnList = "language"),
-      @Index(name = "idx_review_created_at", columnList = "created_at")
+      @Index(name = "idx_review_created_at", columnList = "created_at"),
+      @Index(name = "idx_review_content_hash", columnList = "content_hash")
     })
 @Getter
 @Setter
@@ -38,11 +39,11 @@ public class Review {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /** External identifier from the provider system */
-  @Column(name = "external_id", nullable = false, length = 100)
-  @NotBlank(message = "External ID is required")
-  @Size(max = 100, message = "External ID must not exceed 100 characters")
-  private String externalId;
+  /** Provider review identifier (hotelReviewId from JSON) */
+  @Column(name = "provider_review_id", nullable = false, length = 100)
+  @NotBlank(message = "Provider review ID is required")
+  @Size(max = 100, message = "Provider review ID must not exceed 100 characters")
+  private String providerReviewId;
 
   /** Provider that sourced this review */
   @ManyToOne(fetch = FetchType.LAZY)
@@ -53,28 +54,47 @@ public class Review {
   @NotNull(message = "Provider is required")
   private Provider provider;
 
-  /** Property/Hotel identifier */
-  @Column(name = "property_id", nullable = false, length = 100)
-  @NotBlank(message = "Property ID is required")
-  @Size(max = 100, message = "Property ID must not exceed 100 characters")
-  private String propertyId;
+  /** Hotel identifier */
+  @Column(name = "hotel_id", nullable = false)
+  @NotNull(message = "Hotel ID is required")
+  private Integer hotelId;
 
-  /** Name of the guest who wrote the review */
-  @Column(name = "guest_name", length = 200)
-  @Size(max = 200, message = "Guest name must not exceed 200 characters")
-  private String guestName;
+  /** Hotel name */
+  @Column(name = "hotel_name", length = 300)
+  @Size(max = 300, message = "Hotel name must not exceed 300 characters")
+  private String hotelName;
 
-  /** Rating score (normalized to 0.0-5.0 scale) */
+  /** Name of the guest who wrote the review (displayMemberName from reviewerInfo) */
+  @Column(name = "reviewer_name", length = 200)
+  @Size(max = 200, message = "Reviewer name must not exceed 200 characters")
+  private String reviewerName;
+
+  /** Rating score from the original provider scale */
   @Column(name = "rating", nullable = false)
   @NotNull(message = "Rating is required")
-  @DecimalMin(value = "0.0", message = "Rating must be between 0.0 and 5.0")
-  @DecimalMax(value = "5.0", message = "Rating must be between 0.0 and 5.0")
+  @DecimalMin(value = "0.0", message = "Rating must be non-negative")
+  @DecimalMax(value = "10.0", message = "Rating must not exceed 10.0")
   private Double rating;
 
-  /** Review text content */
+  /** Formatted rating as provided by provider */
+  @Column(name = "formatted_rating", length = 20)
+  @Size(max = 20, message = "Formatted rating must not exceed 20 characters")
+  private String formattedRating;
+
+  /** Rating text description (e.g., "Good", "Excellent") */
+  @Column(name = "rating_text", length = 50)
+  @Size(max = 50, message = "Rating text must not exceed 50 characters")
+  private String ratingText;
+
+  /** Review text content (reviewComments from JSON) */
   @Column(name = "review_text", columnDefinition = "TEXT")
   @Size(max = 10000, message = "Review text must not exceed 10000 characters")
   private String reviewText;
+
+  /** Review title */
+  @Column(name = "review_title", length = 500)
+  @Size(max = 500, message = "Review title must not exceed 500 characters")
+  private String reviewTitle;
 
   /** Date when the review was originally posted */
   @Column(name = "review_date", nullable = false)
@@ -82,41 +102,115 @@ public class Review {
   @PastOrPresent(message = "Review date cannot be in the future")
   private LocalDateTime reviewDate;
 
+  /** Formatted review date as provided by provider */
+  @Column(name = "formatted_review_date", length = 50)
+  @Size(max = 50, message = "Formatted review date must not exceed 50 characters")
+  private String formattedReviewDate;
+
   /** Language code of the review (ISO 639-1) */
-  @Column(name = "language", length = 5)
+  @Column(name = "language", length = 10)
   @Pattern(
       regexp = "^[a-z]{2}(-[A-Z]{2})?$",
       message = "Language must be in ISO 639-1 format (e.g., 'en', 'en-US')")
   private String language;
 
-  /** Optional title of the review */
-  @Column(name = "title", length = 500)
-  @Size(max = 500, message = "Title must not exceed 500 characters")
-  private String title;
+  /** Check-in date month and year */
+  @Column(name = "checkin_date", length = 50)
+  @Size(max = 50, message = "Check-in date must not exceed 50 characters")
+  private String checkinDate;
 
-  /** Stay date if available */
-  @Column(name = "stay_date")
-  private LocalDateTime stayDate;
-
-  /** Room type if specified in the review */
+  /** Room type from reviewerInfo */
   @Column(name = "room_type", length = 200)
   @Size(max = 200, message = "Room type must not exceed 200 characters")
   private String roomType;
 
-  /** Trip type (business, leisure, etc.) */
-  @Column(name = "trip_type", length = 50)
-  @Size(max = 50, message = "Trip type must not exceed 50 characters")
-  private String tripType;
+  /** Review group (e.g., "Solo traveler", "Family") */
+  @Column(name = "review_group", length = 100)
+  @Size(max = 100, message = "Review group must not exceed 100 characters")
+  private String reviewGroup;
+
+  /** Reviewer's country */
+  @Column(name = "reviewer_country", length = 100)
+  @Size(max = 100, message = "Reviewer country must not exceed 100 characters")
+  private String reviewerCountry;
+
+  /** Length of stay in days */
+  @Column(name = "length_of_stay")
+  @Min(value = 0, message = "Length of stay cannot be negative")
+  private Integer lengthOfStay;
+
+  /** Number of reviews by this reviewer */
+  @Column(name = "reviewer_review_count")
+  @Min(value = 0, message = "Reviewer review count cannot be negative")
+  private Integer reviewerReviewCount;
+
+  /** Whether reviewer is an expert */
+  @Column(name = "is_expert_reviewer")
+  @Builder.Default
+  private Boolean isExpertReviewer = false;
+
+  /** Provider ID from the JSON */
+  @Column(name = "provider_external_id")
+  private Integer providerExternalId;
+
+  /** Encrypted review data if available */
+  @Column(name = "encrypted_data", length = 500)
+  @Size(max = 500, message = "Encrypted data must not exceed 500 characters")
+  private String encryptedData;
+
+  /** Review negatives text */
+  @Column(name = "review_negatives", columnDefinition = "TEXT")
+  @Size(max = 5000, message = "Review negatives must not exceed 5000 characters")
+  private String reviewNegatives;
+
+  /** Review positives text */
+  @Column(name = "review_positives", columnDefinition = "TEXT")
+  @Size(max = 5000, message = "Review positives must not exceed 5000 characters")
+  private String reviewPositives;
+
+  /** Original title before translation */
+  @Column(name = "original_title", length = 500)
+  @Size(max = 500, message = "Original title must not exceed 500 characters")
+  private String originalTitle;
+
+  /** Original comment before translation */
+  @Column(name = "original_comment", columnDefinition = "TEXT")
+  @Size(max = 10000, message = "Original comment must not exceed 10000 characters")
+  private String originalComment;
+
+  /** Translation source language */
+  @Column(name = "translate_source", length = 10)
+  @Size(max = 10, message = "Translate source must not exceed 10 characters")
+  private String translateSource;
+
+  /** Translation target language */
+  @Column(name = "translate_target", length = 10)
+  @Size(max = 10, message = "Translate target must not exceed 10 characters")
+  private String translateTarget;
+
+  /** Content hash for duplicate detection */
+  @Column(name = "content_hash", length = 64)
+  @Size(max = 64, message = "Content hash must not exceed 64 characters")
+  private String contentHash;
+
+  /** Source line number from import file */
+  @Column(name = "source_line_number")
+  private Integer sourceLineNumber;
 
   /** Number of helpful votes */
   @Column(name = "helpful_votes")
   @Min(value = 0, message = "Helpful votes cannot be negative")
   private Integer helpfulVotes;
 
+  /** Total votes received */
+  @Column(name = "total_votes")
+  @Min(value = 0, message = "Total votes cannot be negative")
+  private Integer totalVotes;
+
   /** Whether the review is verified */
-  @Column(name = "verified", nullable = false)
+  @Column(name = "is_verified", nullable = false)
   @Builder.Default
-  private Boolean verified = false;
+  private Boolean isVerified = false;
 
   /** Processing status */
   @Enumerated(EnumType.STRING)
@@ -139,14 +233,19 @@ public class Review {
 
   // Business Logic Methods
 
-  /** Determines if the review is positive (rating >= 4.0) */
+  /** Determines if the review is positive (rating >= 7.0 for 10-point scale) */
   public boolean isPositive() {
-    return rating != null && rating >= 4.0;
+    return rating != null && rating >= 7.0;
   }
 
-  /** Determines if the review is negative (rating < 3.0) */
+  /** Determines if the review is negative (rating < 5.0 for 10-point scale) */
   public boolean isNegative() {
-    return rating != null && rating < 3.0;
+    return rating != null && rating < 5.0;
+  }
+
+  /** Determines if the review is neutral (rating between 5.0 and 7.0) */
+  public boolean isNeutral() {
+    return rating != null && rating >= 5.0 && rating < 7.0;
   }
 
   /** Calculates the age of the review in days */
@@ -167,12 +266,17 @@ public class Review {
     return reviewText != null && !reviewText.trim().isEmpty();
   }
 
+  /** Checks if the review has a title */
+  public boolean hasTitle() {
+    return reviewTitle != null && !reviewTitle.trim().isEmpty();
+  }
+
   /** Generates a unique business key for deduplication */
   public String getBusinessKey() {
-    if (provider == null || externalId == null) {
+    if (provider == null || providerReviewId == null) {
       return null;
     }
-    return provider.getCode() + ":" + externalId;
+    return provider.getName() + ":" + providerReviewId;
   }
 
   /** Marks the review as processed */
@@ -188,6 +292,24 @@ public class Review {
   /** Checks if processing is complete */
   public boolean isProcessed() {
     return ProcessingStatus.PROCESSED.equals(this.processingStatus);
+  }
+
+  /** Checks if the review is a solo traveler review */
+  public boolean isSoloTraveler() {
+    return "Solo traveler".equalsIgnoreCase(reviewGroup);
+  }
+
+  /** Checks if the reviewer is experienced (has multiple reviews) */
+  public boolean isExperiencedReviewer() {
+    return reviewerReviewCount != null && reviewerReviewCount > 5;
+  }
+
+  /** Gets the helpful vote percentage */
+  public double getHelpfulVotePercentage() {
+    if (totalVotes == null || totalVotes == 0 || helpfulVotes == null) {
+      return 0.0;
+    }
+    return (helpfulVotes.doubleValue() / totalVotes.doubleValue()) * 100.0;
   }
 
   // Relationship Management
@@ -214,30 +336,30 @@ public class Review {
     if (id != null && review.id != null) {
       return id.equals(review.id);
     }
-    // Fallback: use externalId + provider code if both are set
-    return externalId != null
-        && externalId.equals(review.externalId)
+    // Fallback: use providerReviewId + provider name if both are set
+    return providerReviewId != null
+        && providerReviewId.equals(review.providerReviewId)
         && provider != null
         && review.provider != null
-        && provider.getCode() != null
-        && provider.getCode().equals(review.provider.getCode());
+        && provider.getName() != null
+        && provider.getName().equals(review.provider.getName());
   }
 
   @Override
   public int hashCode() {
     if (id != null) return id.hashCode();
-    int result = externalId != null ? externalId.hashCode() : 0;
+    int result = providerReviewId != null ? providerReviewId.hashCode() : 0;
     result =
         31 * result
-            + (provider != null && provider.getCode() != null ? provider.getCode().hashCode() : 0);
+            + (provider != null && provider.getName() != null ? provider.getName().hashCode() : 0);
     return result;
   }
 
   @Override
   public String toString() {
     return String.format(
-        "Review{id=%d, externalId='%s', propertyId='%s', rating=%.2f, language='%s', processingStatus=%s}",
-        id, externalId, propertyId, rating, language, processingStatus);
+        "Review{id=%d, providerReviewId='%s', hotelId=%d, hotelName='%s', rating=%.1f, language='%s', processingStatus=%s}",
+        id, providerReviewId, hotelId, hotelName, rating, language, processingStatus);
   }
 
   /** Processing status enumeration */

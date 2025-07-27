@@ -7,8 +7,11 @@ import com.reviewsystem.domain.service.FileTrackingService;
 import com.reviewsystem.presentation.exception.FileProcessingException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.paginators.ListObjectsV2Iterable;
 
 /**
  * Service for handling AWS S3 operations for review files. This implementation will be created
@@ -36,6 +40,8 @@ public class S3Service {
   private final S3Client s3Client;
   private final FileTrackingService fileTrackingService;
   private final S3Config s3Config;
+
+  private int maxFilesPerBatch = 100;
 
   /** Validates that the file key is not null or empty */
   private void validateFileKey(String key) {
@@ -67,7 +73,7 @@ public class S3Service {
       return s3Client.listObjectsV2Paginator(request).stream()
           .flatMap(response -> response.contents().stream())
           .filter(this::isValidJsonLFile)
-          .filter(s3Object -> !fileTrackingService.isFileProcessed(s3Object.key()))
+          .filter(s3Object -> !fileTrackingService.isFileAlreadyProcessed(s3Object.key()))
           .toList();
 
     } catch (S3Exception e) {
@@ -185,16 +191,15 @@ public class S3Service {
 
     ProcessedFile processedFile =
         ProcessedFile.builder()
-            .fileName(fileKey)
-            .filePath(fileKey)
+            .s3Key(fileKey)
             .fileSize(fileSize)
-            .processedAt(LocalDateTime.now())
-            .status(ProcessingStatus.COMPLETED)
+            .processingCompletedAt(LocalDateTime.now())
+            .processingStatus(ProcessingStatus.COMPLETED)
             .recordsProcessed(recordsProcessed)
             .recordsSkipped(recordsSkipped)
             .build();
 
-    fileTrackingService.markFileAsProcessed(processedFile);
+    fileTrackingService.markProcessingCompleted(processedFile);
     logger.info("Successfully marked file as processed: {}", fileKey);
   }
 
@@ -210,15 +215,14 @@ public class S3Service {
 
     ProcessedFile processedFile =
         ProcessedFile.builder()
-            .fileName(fileKey)
-            .filePath(fileKey)
+            .s3Key(fileKey)
             .fileSize(fileSize)
-            .processedAt(LocalDateTime.now())
-            .status(ProcessingStatus.FAILED)
+            .processingCompletedAt(LocalDateTime.now())
+            .processingStatus(ProcessingStatus.FAILED)
             .errorMessage(errorMessage)
             .build();
 
-    fileTrackingService.markFileAsProcessed(processedFile);
+    fileTrackingService.markProcessingCompleted(processedFile);
     logger.warn("Marked file as failed: {} - {}", fileKey, errorMessage);
   }
 
@@ -419,5 +423,110 @@ public class S3Service {
    */
   public long getTotalSize() {
     return listFiles().stream().mapToLong(S3FileMetadata::getSize).sum();
+  }
+
+  /**
+   * Lists new files from S3 bucket that match the specified criteria. Uses pagination to handle
+   * large numbers of files efficiently. Wrapper function
+   *
+   * @return List of S3 objects representing new files
+   * @throws FileProcessingException if S3 operation fails
+   */
+  public List<S3Object> listNewFiles() {
+    return listNewFiles(Optional.empty());
+  }
+
+  /**
+   * Lists new files from S3 bucket that match the specified criteria. Uses pagination to handle
+   * large numbers of files efficiently.
+   *
+   * @param sinceDate Optional date to filter files modified after this date
+   * @return List of S3 objects representing new files
+   * @throws FileProcessingException if S3 operation fails
+   */
+  public List<S3Object> listNewFiles(Optional<LocalDateTime> sinceDate) {
+    logger.info(
+        "Starting to list new files from S3 bucket: {} with prefix: {}",
+        s3Config.getBucketName(),
+        s3Config.getPrefix());
+
+    try {
+      // Build the ListObjectsV2Request
+      ListObjectsV2Request.Builder requestBuilder =
+          ListObjectsV2Request.builder()
+              .bucket(s3Config.getBucketName())
+              .prefix(s3Config.getPrefix())
+              .maxKeys(maxFilesPerBatch);
+
+      List<S3Object> allFiles = new ArrayList<>();
+
+      // Use paginator to handle large number of files
+      ListObjectsV2Iterable paginatedResponse =
+          s3Client.listObjectsV2Paginator(requestBuilder.build());
+
+      for (ListObjectsV2Response response : paginatedResponse) {
+        List<S3Object> pageFiles =
+            response.contents().stream()
+                .filter(this::isValidFile)
+                .filter(s3Object -> isFileNewerThan(s3Object, sinceDate))
+                .toList();
+
+        allFiles.addAll(pageFiles);
+
+        logger.debug(
+            "Processed page with {} valid files, total so far: {}",
+            pageFiles.size(),
+            allFiles.size());
+
+        // Prevent loading too many files in memory at once
+        if (allFiles.size() >= maxFilesPerBatch * 10) {
+          logger.warn(
+              "Large number of files detected ({}), limiting to first {} files",
+              allFiles.size(),
+              maxFilesPerBatch * 10);
+          break;
+        }
+      }
+
+      // Sort files by last modified date (oldest first for consistent processing)
+      allFiles.sort(Comparator.comparing(S3Object::lastModified));
+
+      logger.info("Found {} new files in S3 bucket", allFiles.size());
+      return allFiles;
+
+    } catch (NoSuchBucketException e) {
+      logger.error("S3 bucket not found: {}", s3Config.getBucketName(), e);
+      throw new FileProcessingException("S3 bucket not found: " + s3Config.getBucketName(), e);
+    } catch (S3Exception e) {
+      logger.error("S3 service error while listing files", e);
+      throw new FileProcessingException("Failed to list files from S3: " + e.getMessage(), e);
+    } catch (SdkException e) {
+      logger.error("AWS SDK error while listing files", e);
+      throw new FileProcessingException("AWS SDK error: " + e.getMessage(), e);
+    } catch (Exception e) {
+      logger.error("Unexpected error while listing files from S3", e);
+      throw new FileProcessingException("Unexpected error while listing S3 files", e);
+    }
+  }
+
+  private boolean isFileNewerThan(S3Object s3Object, Optional<LocalDateTime> sinceDate) {
+    if (sinceDate.isEmpty()) {
+      return true;
+    }
+
+    if (s3Object.lastModified() == null) {
+      logger.debug("File has no last modified date, including by default: {}", s3Object.key());
+      return true;
+    }
+
+    LocalDateTime fileModified = LocalDateTime.ofInstant(s3Object.lastModified(), ZoneOffset.UTC);
+    boolean isNewer = fileModified.isAfter(sinceDate.get());
+
+    if (!isNewer) {
+      logger.debug(
+          "File {} is older than cutoff date {}, skipping", s3Object.key(), sinceDate.get());
+    }
+
+    return isNewer;
   }
 }

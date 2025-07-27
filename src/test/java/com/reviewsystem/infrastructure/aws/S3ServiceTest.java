@@ -280,9 +280,12 @@ class S3ServiceTest {
           .thenReturn(mockIterable);
 
       // Mock file tracking service
-      when(fileTrackingService.isFileProcessed("reviews/2024-01-01-reviews.jl")).thenReturn(true);
-      when(fileTrackingService.isFileProcessed("reviews/2024-01-02-reviews.jl")).thenReturn(false);
-      when(fileTrackingService.isFileProcessed("reviews/2024-01-03-reviews.jl")).thenReturn(false);
+      when(fileTrackingService.isFileAlreadyProcessed("reviews/2024-01-01-reviews.jl"))
+          .thenReturn(true);
+      when(fileTrackingService.isFileAlreadyProcessed("reviews/2024-01-02-reviews.jl"))
+          .thenReturn(false);
+      when(fileTrackingService.isFileAlreadyProcessed("reviews/2024-01-03-reviews.jl"))
+          .thenReturn(false);
 
       // Act
       List<S3Object> result = s3Service.listUnprocessedFiles();
@@ -323,7 +326,7 @@ class S3ServiceTest {
 
       // Assert
       assertThat(result).isEmpty();
-      verify(fileTrackingService, never()).isFileProcessed(anyString());
+      verify(fileTrackingService, never()).isFileAlreadyProcessed(anyString());
     }
 
     @Test
@@ -358,7 +361,7 @@ class S3ServiceTest {
       when(s3Client.listObjectsV2Paginator(any(ListObjectsV2Request.class)))
           .thenReturn(mockIterable);
 
-      when(fileTrackingService.isFileProcessed(anyString())).thenReturn(false);
+      when(fileTrackingService.isFileAlreadyProcessed(anyString())).thenReturn(false);
 
       // Act
       List<S3Object> result = s3Service.listUnprocessedFiles();
@@ -396,11 +399,10 @@ class S3ServiceTest {
       // Arrange
       ProcessedFile processedFile =
           ProcessedFile.builder()
-              .fileName(TEST_FILE_KEY)
-              .filePath(TEST_FILE_KEY)
+              .s3Key(TEST_FILE_KEY)
               .fileSize(1024L)
-              .processedAt(LocalDateTime.now())
-              .status(ProcessingStatus.COMPLETED)
+              .processingCompletedAt(LocalDateTime.now())
+              .processingStatus(ProcessingStatus.COMPLETED)
               .recordsProcessed(100)
               .recordsSkipped(5)
               .build();
@@ -410,16 +412,15 @@ class S3ServiceTest {
 
       // Assert
       ArgumentCaptor<ProcessedFile> captor = ArgumentCaptor.forClass(ProcessedFile.class);
-      verify(fileTrackingService).markFileAsProcessed(captor.capture());
+      verify(fileTrackingService).markProcessingCompleted(captor.capture());
 
       ProcessedFile captured = captor.getValue();
-      assertThat(captured.getFileName()).isEqualTo(TEST_FILE_KEY);
-      assertThat(captured.getFilePath()).isEqualTo(TEST_FILE_KEY);
+      assertThat(captured.getS3Key()).isEqualTo(TEST_FILE_KEY);
       assertThat(captured.getFileSize()).isEqualTo(1024L);
-      assertThat(captured.getStatus()).isEqualTo(ProcessingStatus.COMPLETED);
+      assertThat(captured.getProcessingStatus()).isEqualTo(ProcessingStatus.COMPLETED);
       assertThat(captured.getRecordsProcessed()).isEqualTo(100);
       assertThat(captured.getRecordsSkipped()).isEqualTo(5);
-      assertThat(captured.getProcessedAt()).isNotNull();
+      assertThat(captured.getProcessingCompletedAt()).isNotNull();
     }
 
     @Test
@@ -432,15 +433,14 @@ class S3ServiceTest {
 
       // Assert
       ArgumentCaptor<ProcessedFile> captor = ArgumentCaptor.forClass(ProcessedFile.class);
-      verify(fileTrackingService).markFileAsProcessed(captor.capture());
+      verify(fileTrackingService).markProcessingCompleted(captor.capture());
 
       ProcessedFile captured = captor.getValue();
-      assertThat(captured.getFileName()).isEqualTo(TEST_FILE_KEY);
-      assertThat(captured.getFilePath()).isEqualTo(TEST_FILE_KEY);
+      assertThat(captured.getS3Key()).isEqualTo(TEST_FILE_KEY);
       assertThat(captured.getFileSize()).isEqualTo(1024L);
-      assertThat(captured.getStatus()).isEqualTo(ProcessingStatus.FAILED);
+      assertThat(captured.getProcessingStatus()).isEqualTo(ProcessingStatus.FAILED);
       assertThat(captured.getErrorMessage()).isEqualTo(errorMessage);
-      assertThat(captured.getProcessedAt()).isNotNull();
+      assertThat(captured.getProcessingCompletedAt()).isNotNull();
     }
   }
 
@@ -488,7 +488,7 @@ class S3ServiceTest {
       when(s3Client.listObjectsV2Paginator(any(ListObjectsV2Request.class)))
           .thenReturn(mockIterable);
 
-      when(fileTrackingService.isFileProcessed(anyString())).thenReturn(false);
+      when(fileTrackingService.isFileAlreadyProcessed(anyString())).thenReturn(false);
 
       // Act
       List<S3Object> result = s3Service.listUnprocessedFiles();

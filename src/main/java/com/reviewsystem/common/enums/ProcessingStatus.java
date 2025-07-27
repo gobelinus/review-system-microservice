@@ -23,6 +23,9 @@ public enum ProcessingStatus {
   /** File processing was cancelled or interrupted. */
   CANCELLED("File processing was cancelled"),
 
+  /** File processing has not started yet and process is IDLE. */
+  IDLE("Processor is waiting for next file"),
+
   /** File processing was skipped (e.g., already processed). */
   SKIPPED("File processing was skipped");
 

@@ -1,14 +1,11 @@
 package com.reviewsystem.domain.entity;
 
+import com.reviewsystem.common.enums.ProviderType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 import java.util.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -31,8 +28,7 @@ import org.hibernate.annotations.UpdateTimestamp;
       @Index(name = "idx_provider_active", columnList = "active"),
       @Index(name = "idx_provider_priority", columnList = "processing_priority")
     })
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -52,8 +48,7 @@ public class Provider {
   @Column(name = "code", nullable = false, length = 10)
   @NotBlank(message = "provider code is required")
   @Size(min = 2, max = 10, message = "provider code must be between 2 and 10 characters")
-  @Pattern(regexp = "^[A-Z]+$", message = "provider code must be uppercase letters only")
-  private String code;
+  private ProviderType code;
 
   /** provider description */
   @Column(name = "description", length = 500)
@@ -234,8 +229,8 @@ public class Provider {
   public void addReview(Review review) {
     if (review == null) return;
     // Set provider first, so hashCode/equals are stable before adding to set
-    if (review.getprovider() != this) {
-      review.setprovider(this);
+    if (review.getProvider() != this) {
+      review.setProvider(this);
     }
     // Now add to set if not already present
     if (!reviews.contains(review)) {
@@ -247,13 +242,13 @@ public class Provider {
   public void removeReview(Review review) {
     if (review != null && reviews.contains(review)) {
       reviews.remove(review);
-      review.setprovider(null);
+      review.setProvider(null);
     }
   }
 
   /** Clears all reviews (use with caution) */
   public void clearReviews() {
-    reviews.forEach(review -> review.setprovider(null));
+    reviews.forEach(review -> review.setProvider(null));
     reviews.clear();
   }
 
@@ -263,7 +258,7 @@ public class Provider {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    provider provider = (provider) o;
+    Provider provider = (Provider) o;
     if (id != null && provider.id != null) {
       return id.equals(provider.id);
     }

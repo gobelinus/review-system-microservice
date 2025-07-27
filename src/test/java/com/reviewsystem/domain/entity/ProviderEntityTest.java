@@ -2,6 +2,7 @@ package com.reviewsystem.domain.entity;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.reviewsystem.common.enums.ProviderType;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -13,7 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("Provider Entity Tests")
+@DisplayName("platform Entity Tests")
 class ProviderEntityTest {
 
   private Validator validator;
@@ -25,17 +26,17 @@ class ProviderEntityTest {
   }
 
   @Nested
-  @DisplayName("Provider Validation")
-  class ProviderValidation {
+  @DisplayName("platform Validation")
+  class platformValidation {
 
     @Test
-    @DisplayName("Should create valid provider with all required fields")
-    void shouldCreateValidProviderWithAllRequiredFields() {
+    @DisplayName("Should create valid platform with all required fields")
+    void shouldCreateValidplatformWithAllRequiredFields() {
       // Given
       Provider provider =
           Provider.builder()
               .name("Agoda")
-              .code("AGODA")
+              .code(ProviderType.AGODA)
               .apiEndpoint("https://api.agoda.com")
               .active(true)
               .build();
@@ -51,88 +52,63 @@ class ProviderEntityTest {
     @DisplayName("Should fail validation when name is null")
     void shouldFailValidationWhenNameIsNull() {
       // Given
-      Provider provider = Provider.builder().code("AGODA").active(true).build();
+      Provider provider = Provider.builder().code(ProviderType.AGODA).active(true).build();
 
       // When
       Set<ConstraintViolation<Provider>> violations = validator.validate(provider);
 
       // Then
       assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage()).isEqualTo("Provider name is required");
+      assertThat(violations.iterator().next().getMessage()).isEqualTo("platform name is required");
     }
 
     @Test
     @DisplayName("Should fail validation when name is blank")
     void shouldFailValidationWhenNameIsBlank() {
       // Given
-      Provider provider = Provider.builder().name("   ").code("AGODA").active(true).build();
+      Provider provider =
+          Provider.builder().name("   ").code(ProviderType.AGODA).active(true).build();
 
       // When
       Set<ConstraintViolation<Provider>> violations = validator.validate(provider);
 
       // Then
       assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage()).isEqualTo("Provider name is required");
+      assertThat(violations.iterator().next().getMessage()).isEqualTo("platform name is required");
     }
 
     @Test
     @DisplayName("Should fail validation when code is null")
     void shouldFailValidationWhenCodeIsNull() {
       // Given
-      Provider provider = Provider.builder().name("Agoda").active(true).build();
+      Provider platform = Provider.builder().name("Agoda").active(true).build();
 
       // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(provider);
+      Set<ConstraintViolation<Provider>> violations = validator.validate(platform);
 
       // Then
       assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage()).isEqualTo("Provider code is required");
-    }
-
-    @Test
-    @DisplayName("Should fail validation when code is not uppercase")
-    void shouldFailValidationWhenCodeIsNotUppercase() {
-      // Given
-      Provider provider = Provider.builder().name("Agoda").code("agoda").active(true).build();
-
-      // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(provider);
-
-      // Then
-      assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage())
-          .isEqualTo("Provider code must be uppercase letters only");
-    }
-
-    @Test
-    @DisplayName("Should fail validation when code contains special characters")
-    void shouldFailValidationWhenCodeContainsSpecialCharacters() {
-      // Given
-      Provider provider = Provider.builder().name("Agoda").code("AGODA-123").active(true).build();
-
-      // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(provider);
-
-      // Then
-      assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage())
-          .isEqualTo("Provider code must be uppercase letters only");
+      assertThat(violations.iterator().next().getMessage()).isEqualTo("platform code is required");
     }
 
     @Test
     @DisplayName("Should fail validation when code is too long")
     void shouldFailValidationWhenCodeIsTooLong() {
       // Given
-      Provider provider =
-          Provider.builder().name("Agoda").code("VERYLONGPROVIDERCODE").active(true).build();
+      Provider platform =
+          Provider.builder()
+              .name("Agoda")
+              .code(ProviderType.VERY_LONG_LONG_PROVIDER_TYPE)
+              .active(true)
+              .build();
 
       // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(provider);
+      Set<ConstraintViolation<Provider>> violations = validator.validate(platform);
 
       // Then
       assertThat(violations).hasSize(1);
       assertThat(violations.iterator().next().getMessage())
-          .isEqualTo("Provider code must be between 2 and 10 characters");
+          .isEqualTo("platform code must be between 2 and 10 characters");
     }
 
     @Test
@@ -142,7 +118,7 @@ class ProviderEntityTest {
       Provider provider =
           Provider.builder()
               .name("Agoda")
-              .code("AGODA")
+              .code(ProviderType.AGODA)
               .apiEndpoint("invalid-url")
               .active(true)
               .build();
@@ -158,17 +134,17 @@ class ProviderEntityTest {
   }
 
   @Nested
-  @DisplayName("Provider-Specific Configurations")
-  class ProviderSpecificConfigurations {
+  @DisplayName("platform-Specific Configurations")
+  class platformSpecificConfigurations {
 
     @Test
     @DisplayName("Should handle Agoda-specific configuration")
     void shouldHandleAgodaSpecificConfiguration() {
       // Given
-      Provider agodaProvider =
+      Provider agodaplatform =
           Provider.builder()
               .name("Agoda")
-              .code("AGODA")
+              .code(ProviderType.AGODA)
               .active(true)
               .ratingScale(10.0)
               .supportedLanguages("en,th,zh,ja")
@@ -176,7 +152,7 @@ class ProviderEntityTest {
               .build();
 
       // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(agodaProvider);
+      Set<ConstraintViolation<Provider>> violations = validator.validate(agodaplatform);
 
       // Then
       assertThat(violations).isEmpty();
@@ -186,10 +162,10 @@ class ProviderEntityTest {
     @DisplayName("Should handle Booking.com-specific configuration")
     void shouldHandleBookingSpecificConfiguration() {
       // Given
-      Provider bookingProvider =
+      Provider bookingplatform =
           Provider.builder()
               .name("Booking.com")
-              .code("BOOKING")
+              .code(ProviderType.BOOKING)
               .active(true)
               .ratingScale(5.0)
               .supportedLanguages("en,fr,de,es,it")
@@ -197,7 +173,7 @@ class ProviderEntityTest {
               .build();
 
       // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(bookingProvider);
+      Set<ConstraintViolation<Provider>> violations = validator.validate(bookingplatform);
 
       // Then
       assertThat(violations).isEmpty();
@@ -207,11 +183,16 @@ class ProviderEntityTest {
     @DisplayName("Should fail validation when rating scale is invalid")
     void shouldFailValidationWhenRatingScaleIsInvalid() {
       // Given
-      Provider provider =
-          Provider.builder().name("Agoda").code("AGODA").active(true).ratingScale(0.0).build();
+      Provider platform =
+          Provider.builder()
+              .name("Agoda")
+              .code(ProviderType.AGODA)
+              .active(true)
+              .ratingScale(0.0)
+              .build();
 
       // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(provider);
+      Set<ConstraintViolation<Provider>> violations = validator.validate(platform);
 
       // Then
       assertThat(violations).hasSize(1);
@@ -223,11 +204,16 @@ class ProviderEntityTest {
     @DisplayName("Should fail validation when processing priority is invalid")
     void shouldFailValidationWhenProcessingPriorityIsInvalid() {
       // Given
-      Provider provider =
-          Provider.builder().name("Agoda").code("AGODA").active(true).processingPriority(0).build();
+      Provider platform =
+          Provider.builder()
+              .name("Agoda")
+              .code(ProviderType.AGODA)
+              .active(true)
+              .processingPriority(0)
+              .build();
 
       // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(provider);
+      Set<ConstraintViolation<Provider>> violations = validator.validate(platform);
 
       // Then
       assertThat(violations).hasSize(1);
@@ -237,20 +223,20 @@ class ProviderEntityTest {
   }
 
   @Nested
-  @DisplayName("Provider Relationships")
-  class ProviderRelationships {
+  @DisplayName("platform Relationships")
+  class platformRelationships {
 
     @Test
     @DisplayName("Should manage reviews collection correctly")
     void shouldManageReviewsCollectionCorrectly() {
       // Given
-      Provider provider = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider platform =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
       Review review1 =
           Review.builder()
-              .externalId("ext-123")
-              .propertyId("prop-456")
-              .guestName("John Doe")
+              .hotelId(456)
+              .reviewerName("John Doe")
               .rating(4.5)
               .reviewText("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
@@ -259,9 +245,8 @@ class ProviderEntityTest {
 
       Review review2 =
           Review.builder()
-              .externalId("ext-124")
-              .propertyId("prop-457")
-              .guestName("Jane Smith")
+              .hotelId(457)
+              .reviewerName("Jane Smith")
               .rating(3.5)
               .reviewText("Good experience")
               .reviewDate(LocalDateTime.now().minusDays(2))
@@ -269,40 +254,40 @@ class ProviderEntityTest {
               .build();
 
       // When
-      provider.addReview(review1);
-      provider.addReview(review2);
+      platform.addReview(review1);
+      platform.addReview(review2);
 
       // Then
-      assertThat(provider.getReviews()).hasSize(2);
-      assertThat(provider.getReviews()).contains(review1, review2);
-      assertThat(review1.getProvider()).isEqualTo(provider);
-      assertThat(review2.getProvider()).isEqualTo(provider);
+      assertThat(platform.getReviews()).hasSize(2);
+      assertThat(platform.getReviews()).contains(review1, review2);
+      assertThat(review1.getProvider()).isEqualTo(platform);
+      assertThat(review2.getProvider()).isEqualTo(platform);
     }
 
     @Test
     @DisplayName("Should remove review correctly")
     void shouldRemoveReviewCorrectly() {
       // Given
-      Provider provider = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider platform =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
       Review review =
           Review.builder()
-              .externalId("ext-123")
-              .propertyId("prop-456")
-              .guestName("John Doe")
+              .hotelId(456)
+              .reviewerName("John Doe")
               .rating(4.5)
               .reviewText("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
               .language("en")
               .build();
 
-      provider.addReview(review);
+      platform.addReview(review);
 
       // When
-      provider.removeReview(review);
+      platform.removeReview(review);
 
       // Then
-      assertThat(provider.getReviews()).isEmpty();
+      assertThat(platform.getReviews()).isEmpty();
       assertThat(review.getProvider()).isNull();
     }
 
@@ -310,13 +295,13 @@ class ProviderEntityTest {
     @DisplayName("Should prevent duplicate reviews")
     void shouldPreventDuplicateReviews() {
       // Given
-      Provider provider = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider platform =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
       Review review =
           Review.builder()
-              .externalId("ext-123")
-              .propertyId("prop-456")
-              .guestName("John Doe")
+              .hotelId(456)
+              .reviewerName("John Doe")
               .rating(4.5)
               .reviewText("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
@@ -324,11 +309,11 @@ class ProviderEntityTest {
               .build();
 
       // When
-      provider.addReview(review);
-      provider.addReview(review); // Adding same review again
+      platform.addReview(review);
+      platform.addReview(review); // Adding same review again
 
       // Then
-      assertThat(provider.getReviews()).hasSize(1);
+      assertThat(platform.getReviews()).hasSize(1);
     }
   }
 
@@ -337,65 +322,77 @@ class ProviderEntityTest {
   class BusinessLogicMethods {
 
     @Test
-    @DisplayName("Should check if provider is active")
-    void shouldCheckIfProviderIsActive() {
+    @DisplayName("Should check if platform is active")
+    void shouldCheckIfplatformIsActive() {
       // Given
-      Provider activeProvider = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider activeplatform =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
-      Provider inactiveProvider =
-          Provider.builder().name("Expedia").code("EXPEDIA").active(false).build();
+      Provider inactiveplatform =
+          Provider.builder().name("Expedia").code(ProviderType.EXPEDIA).active(false).build();
 
       // When & Then
-      assertThat(activeProvider.isActive()).isTrue();
-      assertThat(inactiveProvider.isActive()).isFalse();
+      assertThat(activeplatform.isActive()).isTrue();
+      assertThat(inactiveplatform.isActive()).isFalse();
     }
 
     @Test
     @DisplayName("Should return zero average rating when no reviews")
     void shouldReturnZeroAverageRatingWhenNoReviews() {
       // Given
-      Provider provider = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider platform =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
       // When
-      double averageRating = provider.getAverageRating();
+      double averageRating = platform.getAverageRating();
 
       // Then
       assertThat(averageRating).isEqualTo(0.0);
     }
 
     @Test
-    @DisplayName("Should check if provider supports language")
-    void shouldCheckIfProviderSupportsLanguage() {
+    @DisplayName("Should check if platform supports language")
+    void shouldCheckIfplatformSupportsLanguage() {
       // Given
-      Provider provider =
+      Provider platform =
           Provider.builder()
               .name("Agoda")
-              .code("AGODA")
+              .code(ProviderType.AGODA)
               .supportedLanguages("en,th,zh,ja")
               .active(true)
               .build();
 
       // When & Then
-      assertThat(provider.supportsLanguage("en")).isTrue();
-      assertThat(provider.supportsLanguage("th")).isTrue();
-      assertThat(provider.supportsLanguage("fr")).isFalse();
-      assertThat(provider.supportsLanguage("EN")).isTrue(); // Case insensitive
+      assertThat(platform.supportsLanguage("en")).isTrue();
+      assertThat(platform.supportsLanguage("th")).isTrue();
+      assertThat(platform.supportsLanguage("fr")).isFalse();
+      assertThat(platform.supportsLanguage("EN")).isTrue(); // Case insensitive
     }
 
     @Test
     @DisplayName("Should normalize rating to standard scale")
     void shouldNormalizeRatingToStandardScale() {
       // Given - Agoda uses 10-point scale
-      Provider agodaProvider =
-          Provider.builder().name("Agoda").code("AGODA").ratingScale(10.0).active(true).build();
+      Provider agodaplatform =
+          Provider.builder()
+              .name("Agoda")
+              .code(ProviderType.AGODA)
+              .ratingScale(10.0)
+              .active(true)
+              .build();
 
       // Given - Booking uses 5-point scale
-      Provider bookingProvider =
-          Provider.builder().name("Booking").code("BOOKING").ratingScale(5.0).active(true).build();
+      Provider bookingplatform =
+          Provider.builder()
+              .name("Booking")
+              .code(ProviderType.BOOKING)
+              .ratingScale(5.0)
+              .active(true)
+              .build();
 
       // When
-      double normalizedAgodaRating = agodaProvider.normalizeRating(8.0); // 8/10 = 4.0/5
-      double normalizedBookingRating = bookingProvider.normalizeRating(4.0); // 4/5 = 4.0/5
+      double normalizedAgodaRating = agodaplatform.normalizeRating(8.0); // 8/10 = 4.0/5
+      double normalizedBookingRating = bookingplatform.normalizeRating(4.0); // 4/5 = 4.0/5
 
       // Then
       assertThat(normalizedAgodaRating).isEqualTo(4.0);
@@ -403,37 +400,39 @@ class ProviderEntityTest {
     }
 
     @Test
-    @DisplayName("Should activate and deactivate provider")
-    void shouldActivateAndDeactivateProvider() {
+    @DisplayName("Should activate and deactivate platform")
+    void shouldActivateAndDeactivateplatform() {
       // Given
-      Provider provider = Provider.builder().name("Agoda").code("AGODA").active(false).build();
+      Provider platform =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(false).build();
 
       // When
-      provider.activate();
+      platform.activate();
 
       // Then
-      assertThat(provider.isActive()).isTrue();
+      assertThat(platform.isActive()).isTrue();
 
       // When
-      provider.deactivate();
+      platform.deactivate();
 
       // Then
-      assertThat(provider.isActive()).isFalse();
+      assertThat(platform.isActive()).isFalse();
     }
 
     @Test
     @DisplayName("Should update last processed timestamp")
     void shouldUpdateLastProcessedTimestamp() {
       // Given
-      Provider provider = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider platform =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
       LocalDateTime beforeUpdate = LocalDateTime.now();
 
       // When
-      provider.updateLastProcessedTimestamp();
+      platform.updateLastProcessedTimestamp();
 
       // Then
-      assertThat(provider.getLastProcessedAt()).isAfter(beforeUpdate);
+      assertThat(platform.getLastProcessedAt()).isAfter(beforeUpdate);
     }
   }
 
@@ -445,50 +444,55 @@ class ProviderEntityTest {
     @DisplayName("Should implement equals correctly")
     void shouldImplementEqualsCorrectly() {
       // Given
-      Provider provider1 = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider platform1 =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
-      Provider provider2 = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider platform2 =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
-      Provider provider3 = Provider.builder().name("Booking").code("BOOKING").active(true).build();
+      Provider platform3 =
+          Provider.builder().name("Booking").code(ProviderType.BOOKING).active(true).build();
 
       // When & Then
-      assertThat(provider1).isEqualTo(provider2);
-      assertThat(provider1).isNotEqualTo(provider3);
-      assertThat(provider1).isNotEqualTo(null);
-      assertThat(provider1).isEqualTo(provider1);
+      assertThat(platform1).isEqualTo(platform2);
+      assertThat(platform1).isNotEqualTo(platform3);
+      assertThat(platform1).isNotEqualTo(null);
+      assertThat(platform1).isEqualTo(platform1);
     }
 
     @Test
     @DisplayName("Should implement hashCode consistently")
     void shouldImplementHashCodeConsistently() {
       // Given
-      Provider provider1 = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider platform1 =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
-      Provider provider2 = Provider.builder().name("Agoda").code("AGODA").active(true).build();
+      Provider platform2 =
+          Provider.builder().name("Agoda").code(ProviderType.AGODA).active(true).build();
 
       // When & Then
-      assertThat(provider1.hashCode()).isEqualTo(provider2.hashCode());
-      assertThat(provider1.hashCode()).isEqualTo(provider1.hashCode());
+      assertThat(platform1.hashCode()).isEqualTo(platform2.hashCode());
+      assertThat(platform1.hashCode()).isEqualTo(platform1.hashCode());
     }
 
     @Test
     @DisplayName("Should implement toString with essential information")
     void shouldImplementToStringWithEssentialInformation() {
       // Given
-      Provider provider =
+      Provider platform =
           Provider.builder()
               .id(1L)
               .name("Agoda")
-              .code("AGODA")
+              .code(ProviderType.AGODA)
               .active(true)
               .ratingScale(10.0)
               .build();
 
       // When
-      String toString = provider.toString();
+      String toString = platform.toString();
 
       // Then
-      assertThat(toString).contains("Provider");
+      assertThat(toString).contains("platform");
       assertThat(toString).contains("id=1");
       assertThat(toString).contains("name='Agoda'");
       assertThat(toString).contains("code='AGODA'");

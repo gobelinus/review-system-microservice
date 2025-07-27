@@ -3,6 +3,7 @@ package com.reviewsystem.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.reviewsystem.common.enums.ProviderType;
 import com.reviewsystem.domain.entity.Provider;
 import jakarta.validation.ConstraintViolationException;
 import java.util.List;
@@ -17,46 +18,46 @@ import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
 @ActiveProfiles("test-postgres")
-@DisplayName("ProviderRepository Unit Tests")
+@DisplayName("providerRepository Unit Tests")
 class ProviderRepositoryTest {
 
   @Autowired private TestEntityManager entityManager;
 
   @Autowired private ProviderRepository providerRepository;
 
-  private Provider testProvider;
+  private Provider testprovider;
 
   @BeforeEach
   void setUp() {
     providerRepository.deleteAll();
-    testProvider =
+    testprovider =
         Provider.builder()
-            .code("AGODA")
+            .code(ProviderType.AGODA)
             .name("Agoda.com")
-            .description("Agoda travel platform")
+            .description("Agoda travel provider")
             .active(true)
             .build();
   }
 
   @Test
   @DisplayName("Should save and find provider by code")
-  void shouldSaveAndFindProviderByCode() {
+  void shouldSaveAndFindproviderByCode() {
     // When
-    Provider savedProvider = providerRepository.save(testProvider);
-    Optional<Provider> foundProvider = providerRepository.findByCode("AGODA");
+    Provider savedprovider = providerRepository.save(testprovider);
+    Optional<Provider> foundprovider = providerRepository.findByCode("AGODA");
 
     // Then
-    assertThat(savedProvider.getId()).isNotNull();
-    assertThat(foundProvider).isPresent();
-    assertThat(foundProvider.get().getName()).isEqualTo("Agoda.com");
-    assertThat(foundProvider.get().getDescription()).isEqualTo("Agoda travel platform");
+    assertThat(savedprovider.getId()).isNotNull();
+    assertThat(foundprovider).isPresent();
+    assertThat(foundprovider.get().getName()).isEqualTo("Agoda.com");
+    assertThat(foundprovider.get().getDescription()).isEqualTo("Agoda travel provider");
   }
 
   @Test
   @DisplayName("Should check existence by code")
   void shouldCheckExistenceByCode() {
     // Given
-    providerRepository.save(testProvider);
+    providerRepository.save(testprovider);
 
     // When
     boolean exists = providerRepository.existsByCode("AGODA");
@@ -69,115 +70,118 @@ class ProviderRepositoryTest {
 
   @Test
   @DisplayName("Should find providers by active status")
-  void shouldFindProvidersByActiveStatus() {
+  void shouldFindprovidersByActiveStatus() {
     // Given
-    Provider activeProvider =
-        Provider.builder().code("BOOKING").name("Booking.com").active(true).build();
-    Provider inactiveProvider =
-        Provider.builder().code("EXPEDIA").name("Expedia.com").active(false).build();
-    providerRepository.save(testProvider); // Active by default
-    providerRepository.save(activeProvider);
-    providerRepository.save(inactiveProvider);
+    Provider activeprovider =
+        Provider.builder().code(ProviderType.BOOKING).name("Booking.com").active(true).build();
+    Provider inactiveprovider =
+        Provider.builder().code(ProviderType.EXPEDIA).name("Expedia.com").active(false).build();
+    providerRepository.save(testprovider); // Active by default
+    providerRepository.save(activeprovider);
+    providerRepository.save(inactiveprovider);
 
     // When
-    List<Provider> activeProviders = providerRepository.findByActive(true);
-    List<Provider> inactiveProviders = providerRepository.findByActive(false);
+    List<Provider> activeproviders = providerRepository.findByActive(true);
+    List<Provider> inactiveproviders = providerRepository.findByActive(false);
 
     // Then
-    assertThat(activeProviders).hasSize(2);
-    assertThat(inactiveProviders).hasSize(1);
-    assertThat(inactiveProviders.get(0).getCode()).isEqualTo("EXPEDIA");
+    assertThat(activeproviders).hasSize(2);
+    assertThat(inactiveproviders).hasSize(1);
+    assertThat(inactiveproviders.get(0).getCode()).isEqualTo("EXPEDIA");
   }
 
   @Test
   @DisplayName("Should find all active providers ordered by name")
-  void shouldFindAllActiveProvidersOrderedByName() {
+  void shouldFindAllActiveprovidersOrderedByName() {
     // Given
-    Provider bookingProvider =
-        Provider.builder().code("BOOKING").name("Booking.com").active(true).build();
-    Provider expediaProvider =
-        Provider.builder().code("EXPEDIA").name("Expedia.com").active(true).build();
-    Provider inactiveProvider =
-        Provider.builder().code("INACTIVE").name("Inactive Provider").active(false).build();
+    Provider bookingprovider =
+        Provider.builder().code(ProviderType.BOOKING).name("Booking.com").active(true).build();
+    Provider expediaprovider =
+        Provider.builder().code(ProviderType.EXPEDIA).name("Expedia.com").active(true).build();
+    Provider inactiveprovider =
+        Provider.builder()
+            .code(ProviderType.INACTIVE)
+            .name("Inactive provider")
+            .active(false)
+            .build();
 
-    providerRepository.save(expediaProvider); // Should be first alphabetically
-    providerRepository.save(testProvider); // Agoda.com
-    providerRepository.save(bookingProvider); // Booking.com
-    providerRepository.save(inactiveProvider); // Should be excluded
+    providerRepository.save(expediaprovider); // Should be first alphabetically
+    providerRepository.save(testprovider); // Agoda.com
+    providerRepository.save(bookingprovider); // Booking.com
+    providerRepository.save(inactiveprovider); // Should be excluded
 
     // When
-    List<Provider> activeProviders = providerRepository.findAllActiveProviders();
+    List<Provider> activeproviders = providerRepository.findAllActiveProviders();
 
     // Then
-    assertThat(activeProviders).hasSize(3);
-    assertThat(activeProviders.get(0).getName()).isEqualTo("Agoda.com");
-    assertThat(activeProviders.get(1).getName()).isEqualTo("Booking.com");
-    assertThat(activeProviders.get(2).getName()).isEqualTo("Expedia.com");
+    assertThat(activeproviders).hasSize(3);
+    assertThat(activeproviders.get(0).getName()).isEqualTo("Agoda.com");
+    assertThat(activeproviders.get(1).getName()).isEqualTo("Booking.com");
+    assertThat(activeproviders.get(2).getName()).isEqualTo("Expedia.com");
   }
 
   @Test
   @DisplayName("Should find providers by name containing ignore case")
-  void shouldFindProvidersByNameContainingIgnoreCase() {
+  void shouldFindprovidersByNameContainingIgnoreCase() {
     // Given
-    Provider bookingProvider =
-        Provider.builder().code("BOOKING").name("Booking.com").active(true).build();
-    Provider airbnbProvider =
-        Provider.builder().code("AIRBNB").name("Airbnb Inc").active(true).build();
+    Provider bookingprovider =
+        Provider.builder().code(ProviderType.BOOKING).name("Booking.com").active(true).build();
+    Provider airbnbprovider =
+        Provider.builder().code(ProviderType.AIRBNB).name("Airbnb Inc").active(true).build();
 
-    providerRepository.save(testProvider);
-    providerRepository.save(bookingProvider);
-    providerRepository.save(airbnbProvider);
+    providerRepository.save(testprovider);
+    providerRepository.save(bookingprovider);
+    providerRepository.save(airbnbprovider);
 
     // When
-    List<Provider> dotComProviders = providerRepository.findByNameContainingIgnoreCase(".com");
-    List<Provider> bookingProviders = providerRepository.findByNameContainingIgnoreCase("BOOKING");
+    List<Provider> dotComproviders = providerRepository.findByNameContainingIgnoreCase(".com");
+    List<Provider> bookingproviders = providerRepository.findByNameContainingIgnoreCase("BOOKING");
 
     // Then
-    assertThat(dotComProviders).hasSize(2);
-    assertThat(bookingProviders).hasSize(1);
-    assertThat(bookingProviders.get(0).getCode()).isEqualTo("BOOKING");
+    assertThat(dotComproviders).hasSize(2);
+    assertThat(bookingproviders).hasSize(1);
+    assertThat(bookingproviders.get(0).getCode()).isEqualTo("BOOKING");
   }
 
   @Test
   @DisplayName("Should validate provider constraints")
-  void shouldValidateProviderConstraints() {
+  void shouldValidateproviderConstraints() {
     // When & Then - Missing code should throw ConstraintViolationException
     assertThatThrownBy(
             () -> {
-              Provider invalidProvider = new Provider();
-              invalidProvider.setCode(""); // Blank code
-              invalidProvider.setName("Valid Name");
-              providerRepository.saveAndFlush(invalidProvider);
+              Provider invalidprovider = new Provider();
+              invalidprovider.setName("Valid Name");
+              providerRepository.saveAndFlush(invalidprovider);
             })
         .isInstanceOf(ConstraintViolationException.class);
 
     // Missing name should throw ConstraintViolationException
     assertThatThrownBy(
             () -> {
-              Provider invalidProvider = new Provider();
-              invalidProvider.setCode("VALID");
-              invalidProvider.setName(""); // Blank name
-              providerRepository.saveAndFlush(invalidProvider);
+              Provider invalidprovider = new Provider();
+              invalidprovider.setCode(ProviderType.INACTIVE);
+              invalidprovider.setName(""); // Blank name
+              providerRepository.saveAndFlush(invalidprovider);
             })
         .isInstanceOf(ConstraintViolationException.class);
   }
 
   @Test
   @DisplayName("Should handle unique constraint on provider code")
-  void shouldHandleUniqueConstraintOnProviderCode() {
+  void shouldHandleUniqueConstraintOnproviderCode() {
     // Given
-    providerRepository.save(testProvider);
+    providerRepository.save(testprovider);
 
     // When & Then - Duplicate code should fail
-    Provider duplicateProvider =
+    Provider duplicateprovider =
         Provider.builder()
-            .code("AGODA")
+            .code(ProviderType.AGODA)
             .name("Agoda.com")
-            .description("Agoda travel platform")
+            .description("Agoda travel provider")
             .active(true)
             .build();
 
-    assertThatThrownBy(() -> providerRepository.saveAndFlush(duplicateProvider))
+    assertThatThrownBy(() -> providerRepository.saveAndFlush(duplicateprovider))
         .hasRootCauseInstanceOf(org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException.class);
   }
 }

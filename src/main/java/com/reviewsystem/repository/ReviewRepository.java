@@ -14,17 +14,17 @@ import org.springframework.data.repository.query.Param;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
   // Basic finder methods
-  Optional<Review> findByExternalIdAndProvider(String externalId, Provider provider);
+  Optional<Review> findByExternalIdAndprovider(String externalId, Provider provider);
 
-  boolean existsByExternalIdAndProvider(String externalId, Provider provider);
+  boolean existsByExternalIdAndprovider(String externalId, Provider provider);
 
-  List<Review> findByPropertyId(String propertyId);
+  List<Review> findByhotelId(String hotelId);
 
-  Page<Review> findByPropertyId(String propertyId, Pageable pageable);
+  Page<Review> findByhotelId(String hotelId, Pageable pageable);
 
-  List<Review> findByProvider(Provider provider);
+  List<Review> findByprovider(Provider provider);
 
-  Page<Review> findByProvider(Provider provider, Pageable pageable);
+  Page<Review> findByprovider(Provider provider, Pageable pageable);
 
   // Rating-based queries
   List<Review> findByRatingGreaterThanEqual(Double rating);
@@ -44,37 +44,35 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
   List<Review> findByVerified(Boolean verified);
 
   // Custom JPQL queries
-  @Query("SELECT r FROM Review r WHERE r.propertyId = :propertyId AND r.rating >= :minRating")
-  List<Review> findByPropertyIdAndMinRating(
-      @Param("propertyId") String propertyId, @Param("minRating") Double minRating);
+  @Query("SELECT r FROM Review r WHERE r.hotelId = :hotelId AND r.rating >= :minRating")
+  List<Review> findByhotelIdAndMinRating(
+      @Param("hotelId") String hotelId, @Param("minRating") Double minRating);
 
   @Query(
       "SELECT r FROM Review r JOIN FETCH r.provider p WHERE p = :provider AND r.reviewDate > :fromDate ORDER BY r.reviewDate DESC")
-  List<Review> findRecentReviewsByProvider(
+  List<Review> findRecentReviewsByprovider(
       @Param("provider") Provider provider, @Param("fromDate") LocalDateTime fromDate);
 
-  @Query("SELECT AVG(r.rating) FROM Review r WHERE r.propertyId = :propertyId")
-  Double findAverageRatingByPropertyId(@Param("propertyId") String propertyId);
+  @Query("SELECT AVG(r.rating) FROM Review r WHERE r.hotelId = :hotelId")
+  Double findAverageRatingByhotelId(@Param("hotelId") String hotelId);
 
-  @Query("SELECT COUNT(r) FROM Review r WHERE r.propertyId = :propertyId")
-  Long countReviewsByPropertyId(@Param("propertyId") String propertyId);
+  @Query("SELECT COUNT(r) FROM Review r WHERE r.hotelId = :hotelId")
+  Long countReviewsByhotelId(@Param("hotelId") String hotelId);
 
   @Query(
-      "SELECT r FROM Review r WHERE r.propertyId = :propertyId AND r.language = :language ORDER BY r.reviewDate DESC")
-  Page<Review> findByPropertyIdAndLanguageOrderByReviewDateDesc(
-      @Param("propertyId") String propertyId,
-      @Param("language") String language,
-      Pageable pageable);
+      "SELECT r FROM Review r WHERE r.hotelId = :hotelId AND r.language = :language ORDER BY r.reviewDate DESC")
+  Page<Review> findByhotelIdAndLanguageOrderByReviewDateDesc(
+      @Param("hotelId") String hotelId, @Param("language") String language, Pageable pageable);
 
   // Native query example for complex operations
   @Query(
       value =
-          "SELECT * FROM reviews r WHERE r.property_id = :propertyId AND "
+          "SELECT * FROM reviews r WHERE r.property_id = :hotelId AND "
               + "r.review_date >= :startDate AND r.review_date <= :endDate AND "
               + "r.rating >= :minRating ORDER BY r.review_date DESC",
       nativeQuery = true)
   List<Review> findReviewsWithComplexCriteria(
-      @Param("propertyId") String propertyId,
+      @Param("hotelId") String hotelId,
       @Param("startDate") LocalDateTime startDate,
       @Param("endDate") LocalDateTime endDate,
       @Param("minRating") Double minRating);

@@ -68,7 +68,7 @@ public final class ApplicationConstants {
 
   // Cache Constants
   public static final String CACHE_PROCESSED_FILES = "processedFiles";
-  public static final String CACHE_PROVIDERS = "providers";
+  public static final String CACHE_providerS = "providers";
   public static final int CACHE_TTL_MINUTES = 60;
 
   // API Constants
@@ -83,10 +83,10 @@ public final class ApplicationConstants {
   public static final String HEADER_REQUEST_ID = "X-Request-ID";
   public static final String HEADER_API_VERSION = "X-API-Version";
 
-  // Provider Constants
-  public static final String PROVIDER_AGODA = "AGODA";
-  public static final String PROVIDER_BOOKING = "BOOKING";
-  public static final String PROVIDER_EXPEDIA = "EXPEDIA";
+  // provider Constants
+  public static final String provider_AGODA = "AGODA";
+  public static final String provider_BOOKING = "BOOKING";
+  public static final String provider_EXPEDIA = "EXPEDIA";
 
   // Date Formats
   public static final String DATE_FORMAT_ISO = "yyyy-MM-dd'T'HH:mm:ss";

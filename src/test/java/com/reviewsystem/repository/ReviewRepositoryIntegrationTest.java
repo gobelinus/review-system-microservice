@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.reviewsystem.ReviewSystemMicroserviceApplication;
+import com.reviewsystem.common.enums.ProviderType;
 import com.reviewsystem.domain.entity.Provider;
 import com.reviewsystem.domain.entity.Review;
 import jakarta.persistence.EntityManager;
@@ -65,9 +66,9 @@ class ReviewRepositoryIntegrationTest {
     }
     testProvider =
         Provider.builder()
-            .code("AGODA")
+            .code(ProviderType.AGODA)
             .name("Agoda.com")
-            .description("Agoda travel platform")
+            .description("Agoda travel provider")
             .active(true)
             .build();
     testProvider = providerRepository.save(testProvider);
@@ -86,15 +87,14 @@ class ReviewRepositoryIntegrationTest {
     for (int i = 0; i < 1000; i++) {
       Review review =
           Review.builder()
-              .externalId("AGD" + i)
               .provider(testProvider)
-              .propertyId("HOTEL" + (i % 10))
-              .guestName("User " + i)
+              .hotelId((i % 10) + 1)
+              .reviewerName("User " + i)
               .rating(getRandomRating())
               .reviewText("Review text " + i)
               .reviewDate(LocalDateTime.now().minusDays(i % 30))
               .language(i % 2 == 0 ? "en" : "fr")
-              .verified(i % 3 == 0)
+              .isVerified(i % 3 == 0)
               .build();
       reviewRepository.save(review);
     }
@@ -114,14 +114,13 @@ class ReviewRepositoryIntegrationTest {
 
   @Test
   @DisplayName("Should maintain referential integrity with providers")
-  void shouldMaintainReferentialIntegrityWithProviders() {
+  void shouldMaintainReferentialIntegrityWithproviders() {
     // Given
     Review review =
         Review.builder()
-            .externalId("TEST123")
             .provider(testProvider)
-            .propertyId("HOTEL001")
-            .guestName("Test User")
+            .hotelId(1)
+            .reviewerName("Test User")
             .rating(getRandomRating())
             .reviewText("Test review")
             .reviewDate(LocalDateTime.now())
@@ -152,28 +151,27 @@ class ReviewRepositoryIntegrationTest {
   @DisplayName("Should handle complex query with joins efficiently")
   void shouldHandleComplexQueryWithJoinsEfficiently() {
     // Given - Create reviews with different providers
-    Provider bookingProvider =
+    Provider bookingprovider =
         providerRepository.save(
-            Provider.builder().code("BOOKING").name("Booking.com").active(true).build());
-    Provider expediaProvider =
+            Provider.builder().code(ProviderType.BOOKING).name("Booking.com").active(true).build());
+    Provider expediaprovider =
         providerRepository.save(
-            Provider.builder().code("EXPEDIA").name("Expedia.com").active(true).build());
+            Provider.builder().code(ProviderType.EXPEDIA).name("Expedia.com").active(true).build());
 
     for (int i = 0; i < 100; i++) {
       Provider provider =
           switch (i % 3) {
             case 0 -> testProvider;
-            case 1 -> bookingProvider;
-            case 2 -> expediaProvider;
+            case 1 -> bookingprovider;
+            case 2 -> expediaprovider;
             default -> testProvider;
           };
 
       Review review =
           Review.builder()
-              .externalId(provider.getCode() + i)
               .provider(provider)
-              .propertyId("HOTEL" + (i % 5))
-              .guestName("User " + i)
+              .hotelId((i % 5) + 1)
+              .reviewerName("User " + i)
               .rating(getRandomRating())
               .reviewText("Review " + i)
               .reviewDate(LocalDateTime.now().minusDays(i % 10))
@@ -184,7 +182,7 @@ class ReviewRepositoryIntegrationTest {
     // When
     long startTime = System.currentTimeMillis();
     List<Review> recentAgodaReviews =
-        reviewRepository.findRecentReviewsByProvider(
+        reviewRepository.findRecentReviewsByprovider(
             testProvider, LocalDateTime.now().minusDays(5));
     long endTime = System.currentTimeMillis();
 
@@ -208,10 +206,9 @@ class ReviewRepositoryIntegrationTest {
     for (int i = 0; i < 500; i++) {
       Review review =
           Review.builder()
-              .externalId("BATCH" + i)
               .provider(testProvider)
-              .propertyId("HOTEL001")
-              .guestName("User " + i)
+              .hotelId(1)
+              .reviewerName("User " + i)
               .rating(getRandomRating())
               .reviewText("Batch review " + i)
               .reviewDate(LocalDateTime.now().minusMinutes(i))
