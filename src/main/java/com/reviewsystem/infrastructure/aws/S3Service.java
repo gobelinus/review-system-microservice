@@ -529,4 +529,57 @@ public class S3Service {
 
     return isNewer;
   }
+
+  public String getBucketName() {
+    return s3Config.getBucketName();
+  }
+
+  public String getRegion() {
+    return s3Config.getRegion();
+  }
+
+  /**
+   * Checks connectivity to AWS S3 service by attempting to get bucket location. This is a
+   * lightweight operation that verifies: 1. AWS credentials are valid 2. Network connectivity to S3
+   * is available 3. The specified bucket exists and is accessible
+   *
+   * @return true if S3 service is healthy and accessible, false otherwise
+   */
+  public boolean checkConnectivity() {
+    String bucketName = getBucketName();
+    try {
+      logger.debug("Checking S3 connectivity for bucket: {}", bucketName);
+
+      // Attempt to get bucket location - lightweight operation that validates:
+      // - AWS credentials
+      // - Network connectivity
+      // - Bucket existence and permissions
+      GetBucketLocationRequest request =
+          GetBucketLocationRequest.builder().bucket(bucketName).build();
+
+      s3Client.getBucketLocation(request);
+
+      logger.debug("S3 connectivity check successful for bucket: {}", bucketName);
+      return true;
+
+    } catch (NoSuchBucketException e) {
+      logger.warn("S3 bucket does not exist: {}", bucketName, e);
+      return false;
+
+    } catch (S3Exception e) {
+      // Handle S3-specific errors (permissions, invalid credentials, etc.)
+      logger.warn("S3 service error during connectivity check: {}", e.getMessage(), e);
+      return false;
+
+    } catch (SdkException e) {
+      // Handle SDK-level errors (network issues, timeout, etc.)
+      logger.warn("AWS SDK error during S3 connectivity check: {}", e.getMessage(), e);
+      return false;
+
+    } catch (Exception e) {
+      // Handle any unexpected errors
+      logger.error("Unexpected error during S3 connectivity check", e);
+      return false;
+    }
+  }
 }

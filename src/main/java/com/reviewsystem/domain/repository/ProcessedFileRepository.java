@@ -2,7 +2,9 @@ package com.reviewsystem.domain.repository;
 
 import com.reviewsystem.common.enums.ProcessingStatus;
 import com.reviewsystem.domain.entity.ProcessedFile;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +46,7 @@ public interface ProcessedFileRepository {
   List<ProcessedFile> findRecentlyProcessedFiles(
       String provider, LocalDateTime since, ProcessingStatus status);
 
-  /** Count files by status */
+  /** Count files by status and between times */
   long countByStatusAndProcessedAtBetween(
       ProcessingStatus status, LocalDateTime startTime, LocalDateTime endTime);
 
@@ -53,6 +55,9 @@ public interface ProcessedFileRepository {
 
   /** count all processed file before cutoff */
   long countByProcessedAtBefore(LocalDateTime dateTime);
+
+  /** Count files by status and before cutoff */
+  long countByStatusAndProcessedAtBefore(ProcessingStatus status, LocalDateTime startTime);
 
   /** Count files by provider and status */
   long countByProviderAndProcessingStatus(String provider, ProcessingStatus status);
@@ -72,4 +77,44 @@ public interface ProcessedFileRepository {
 
   /** Delete all records (mainly for testing) */
   void deleteAll();
+
+  /**
+   * Find the most recently processed file ordered by processedAt timestamp in descending order.
+   * Returns the latest processed file regardless of status.
+   *
+   * @return Optional containing the most recently processed file, or empty if no files exist
+   */
+  Optional<ProcessedFile> findTopByOrderByProcessedAtDesc();
+
+  /**
+   * Count all processed files for today using existing method This default method calculates
+   * today's date range and uses existing functionality
+   *
+   * @return Number of files processed today
+   */
+  default long countProcessedFilesToday() {
+    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+    LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+
+    // Use existing method by calculating:
+    // total before end of day - total before start of day = today's count
+    long totalBeforeEndOfDay = countByProcessedAtBefore(endOfDay.plusNanos(1));
+    long totalBeforeStartOfDay = countByProcessedAtBefore(startOfDay);
+
+    return totalBeforeEndOfDay - totalBeforeStartOfDay;
+  }
+
+  /**
+   * Count failed files for today using existing method This default method calculates today's date
+   * range and uses existing functionality
+   *
+   * @return Number of files that failed processing today
+   */
+  default long countFailedFilesToday() {
+    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+    LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
+
+    // Use existing countByStatusAndProcessedAtBetween method
+    return countByStatusAndProcessedAtBetween(ProcessingStatus.FAILED, startOfDay, endOfDay);
+  }
 }

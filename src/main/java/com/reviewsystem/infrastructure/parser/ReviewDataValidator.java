@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -24,7 +22,8 @@ public class ReviewDataValidator {
   private static final double MIN_RATING = 0.0;
   private static final double MAX_RATING = 10.0;
   private static final int MAX_REVIEW_AGE_YEARS = 20;
-  private static final Logger log = LoggerFactory.getLogger(ReviewDataValidator.class);
+
+  // private static final Logger log = LoggerFactory.getLogger(ReviewDataValidator.class);
 
   /** Validates raw review data and returns validation result */
   public ValidationResult validate(RawReviewData reviewData) {

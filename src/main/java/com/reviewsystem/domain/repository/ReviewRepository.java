@@ -48,6 +48,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
   @Query("SELECT COUNT(r) FROM Review r WHERE r.provider.id = :providerId")
   Long countByProviderId(@Param("providerId") Long providerId);
 
+  /** Count reviews before cutoff */
+  Long countByCreatedAtBefore(LocalDateTime dateTime);
+
   /** Count reviews by hotel */
   Long countByHotelId(Integer hotelId);
 
