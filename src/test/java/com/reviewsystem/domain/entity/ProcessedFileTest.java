@@ -50,7 +50,7 @@ class ProcessedFileTest {
     @Test
     @DisplayName("Should fail validation when s3Key is null")
     void shouldFailValidationWhenS3KeyIsNull() {
-      ProcessedFile file = validProcessedFile.builder().s3Key(null).build();
+      ProcessedFile file = validProcessedFile.toBuilder().s3Key(null).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
@@ -61,7 +61,7 @@ class ProcessedFileTest {
     @Test
     @DisplayName("Should fail validation when s3Key is blank")
     void shouldFailValidationWhenS3KeyIsBlank() {
-      ProcessedFile file = validProcessedFile.builder().s3Key("").build();
+      ProcessedFile file = validProcessedFile.toBuilder().s3Key("").build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
@@ -73,7 +73,7 @@ class ProcessedFileTest {
     @DisplayName("Should fail validation when s3Key exceeds maximum length")
     void shouldFailValidationWhenS3KeyExceedsMaxLength() {
       String longS3Key = "a".repeat(1025);
-      ProcessedFile file = validProcessedFile.builder().s3Key(longS3Key).build();
+      ProcessedFile file = validProcessedFile.toBuilder().s3Key(longS3Key).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
@@ -85,7 +85,7 @@ class ProcessedFileTest {
     @Test
     @DisplayName("Should fail validation when etag is null")
     void shouldFailValidationWhenEtagIsNull() {
-      ProcessedFile file = validProcessedFile.builder().etag(null).build();
+      ProcessedFile file = validProcessedFile.toBuilder().etag(null).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
@@ -96,7 +96,7 @@ class ProcessedFileTest {
     @Test
     @DisplayName("Should fail validation when etag is blank")
     void shouldFailValidationWhenEtagIsBlank() {
-      ProcessedFile file = validProcessedFile.builder().etag("   ").build();
+      ProcessedFile file = validProcessedFile.toBuilder().etag("   ").build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
@@ -108,7 +108,7 @@ class ProcessedFileTest {
     @DisplayName("Should fail validation when etag exceeds maximum length")
     void shouldFailValidationWhenEtagExceedsMaxLength() {
       String longEtag = "a".repeat(256);
-      ProcessedFile file = validProcessedFile.builder().etag(longEtag).build();
+      ProcessedFile file = validProcessedFile.toBuilder().etag(longEtag).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
@@ -120,19 +120,26 @@ class ProcessedFileTest {
     @Test
     @DisplayName("Should fail validation when fileSize is null")
     void shouldFailValidationWhenFileSizeIsNull() {
-      ProcessedFile file = validProcessedFile.builder().fileSize(null).build();
+      ProcessedFile file = validProcessedFile.toBuilder().fileSize(null).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
       assertThat(violations).hasSize(1);
       assertThat(violations.iterator().next().getMessage()).isEqualTo("File size cannot be null");
+
+      // Assert that other fields are NOT null and retain their original values
+      assertThat(file.getS3Key()).isEqualTo(validProcessedFile.getS3Key());
+      assertThat(file.getEtag()).isEqualTo(validProcessedFile.getEtag());
+      assertThat(file.getLastModifiedDate()).isEqualTo(validProcessedFile.getLastModifiedDate());
+      assertThat(file.getProcessingStatus()).isEqualTo(validProcessedFile.getProcessingStatus());
+      assertThat(file.getProvider()).isEqualTo(validProcessedFile.getProvider());
     }
 
     @Test
     @DisplayName("Should fail validation when fileSize is zero or negative")
     void shouldFailValidationWhenFileSizeIsZeroOrNegative() {
-      ProcessedFile file1 = validProcessedFile.builder().fileSize(0L).build();
-      ProcessedFile file2 = validProcessedFile.builder().fileSize(-1L).build();
+      ProcessedFile file1 = validProcessedFile.toBuilder().fileSize(0L).build();
+      ProcessedFile file2 = validProcessedFile.toBuilder().fileSize(-1L).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations1 = validator.validate(file1);
       Set<ConstraintViolation<ProcessedFile>> violations2 = validator.validate(file2);
@@ -148,7 +155,7 @@ class ProcessedFileTest {
     @Test
     @DisplayName("Should fail validation when processingStatus is null")
     void shouldFailValidationWhenProcessingStatusIsNull() {
-      ProcessedFile file = validProcessedFile.builder().processingStatus(null).build();
+      ProcessedFile file = validProcessedFile.toBuilder().processingStatus(null).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
@@ -160,7 +167,7 @@ class ProcessedFileTest {
     @Test
     @DisplayName("Should fail validation when provider is null")
     void shouldFailValidationWhenproviderIsNull() {
-      ProcessedFile file = validProcessedFile.builder().provider(null).build();
+      ProcessedFile file = validProcessedFile.toBuilder().provider(null).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
@@ -172,7 +179,7 @@ class ProcessedFileTest {
     @DisplayName("Should fail validation when provider exceeds maximum length")
     void shouldFailValidationWhenproviderExceedsMaxLength() {
       String longprovider = "a".repeat(51);
-      ProcessedFile file = validProcessedFile.builder().provider(longprovider).build();
+      ProcessedFile file = validProcessedFile.toBuilder().provider(longprovider).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
@@ -185,8 +192,7 @@ class ProcessedFileTest {
     @DisplayName("Should pass validation with maximum allowed field lengths")
     void shouldPassValidationWithMaximumAllowedFieldLengths() {
       ProcessedFile file =
-          validProcessedFile
-              .builder()
+          validProcessedFile.toBuilder()
               .s3Key("a".repeat(1024))
               .etag("a".repeat(255))
               .provider("a".repeat(50))

@@ -62,7 +62,7 @@ CREATE TABLE review (
     encrypted_review_data VARCHAR(500),
 
     -- Processing Information
-    processed_file_id BIGINT REFERENCES processed_file(id),
+    processed_file_id BIGINT REFERENCES processed_files(id),
     raw_json_data JSONB, -- Store original JSON for debugging
     processing_status VARCHAR(50) DEFAULT 'ACTIVE',
 
@@ -89,12 +89,12 @@ CREATE INDEX idx_review_date_rating ON review(review_date, rating);
 CREATE INDEX idx_review_hotel_date ON review(hotel_id, review_date DESC);
 
 -- Unique constraint to prevent duplicate reviews
-CREATE UNIQUE INDEX idx_review_unique ON review(hotel_review_id, external_provider_id, provider_id);
+CREATE UNIQUE INDEX idx_review_unique ON review(hotel_review_id, provider_external_id, provider_id);
 
 -- Add comments
 COMMENT ON TABLE review IS 'Stores hotel reviews from various providers (Agoda, Booking.com, Expedia)';
 COMMENT ON COLUMN review.hotel_review_id IS 'Review ID from the external provider';
-COMMENT ON COLUMN review.external_provider_id IS 'Provider ID from the JSON (e.g., 332 for Agoda)';
+COMMENT ON COLUMN review.provider_external_id IS 'Provider ID from the JSON (e.g., 332 for Agoda)';
 COMMENT ON COLUMN review.raw_json_data IS 'Original JSON data for debugging and future processing';
 COMMENT ON COLUMN review.encrypted_review_data IS 'Encrypted review data from provider';
 COMMENT ON COLUMN review.processing_status IS 'Status: ACTIVE, DELETED, FLAGGED, PENDING_REVIEW';

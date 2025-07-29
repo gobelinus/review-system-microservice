@@ -1,0 +1,68 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+target/
+build/
+out/
+*.class
+
+# Logs
+logs/
+*.log
+
+# Data directories
+data/
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Configuration files that shouldn't be in container
+.env*
+application-local.yml
+application-dev.yml
+
+# Test files
+src/test/
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*~
+
+# Node.js (if any frontend components)
+node_modules/
+npm-debug.log*
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Spring Boot
+spring-boot-devtools.properties

@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Review entity representing a customer review from external providers Supports reviews from
@@ -14,7 +16,7 @@ import org.hibernate.annotations.UpdateTimestamp;
  */
 @Entity
 @Table(
-    name = "reviews",
+    name = "review",
     uniqueConstraints = {
       @UniqueConstraint(
           columnNames = {"provider_review_id", "provider_id"},
@@ -62,7 +64,7 @@ public class Review {
   private String platform;
 
   /** Provider review identifier (hotelReviewId from JSON) */
-  @Column(name = "provider_review_id", nullable = false, length = 100)
+  @Column(name = "hotel_review_id", nullable = false, length = 100)
   @NotBlank(message = "Provider review ID is required")
   @Size(max = 100, message = "Provider review ID must not exceed 100 characters")
   private String hotelReviewId;
@@ -178,6 +180,16 @@ public class Review {
   @Min(value = 0, message = "Length of stay cannot be negative")
   private Integer lengthOfStay;
 
+  /** Number of reviews by this reviewer */
+  @Column(name = "reviewer_review_count")
+  @Min(value = 0, message = "Reviewer review count cannot be negative")
+  private Integer reviewerReviewCount;
+
+  /** Whether reviewer is an expert */
+  @Column(name = "is_expert_reviewer")
+  @Builder.Default
+  private Boolean isExpertReviewer = false;
+
   @Column(name = "is_show_global_icon", nullable = false)
   @Builder.Default // Default value as per table definition
   private Boolean isShowGlobalIcon = false;
@@ -210,30 +222,13 @@ public class Review {
   @Column(name = "review_provider_text", length = 100)
   private String reviewProviderText;
 
-  /** Room type from reviewerInfo */
-  @Column(name = "room_type", length = 200)
-  @Size(max = 200, message = "Room type must not exceed 200 characters")
-  private String roomType;
-
-  /** Review group (e.g., "Solo traveler", "Family") */
-  @Column(name = "review_group", length = 100)
-  @Size(max = 100, message = "Review group must not exceed 100 characters")
-  private String reviewGroup;
-
-  /** Number of reviews by this reviewer */
-  @Column(name = "reviewer_review_count")
-  @Min(value = 0, message = "Reviewer review count cannot be negative")
-  private Integer reviewerReviewCount;
-
-  /** Whether reviewer is an expert */
-  @Column(name = "is_expert_reviewer")
-  @Builder.Default
-  private Boolean isExpertReviewer = false;
-
   /** Encrypted review data if available */
   @Column(name = "encrypted_review_data", length = 500)
   @Size(max = 500, message = "Encrypted data must not exceed 500 characters")
   private String encryptedReviewData;
+
+  @Column(name = "processed_file_id")
+  private Long processedFileId;
 
   /** Processing status */
   @Enumerated(EnumType.STRING)
@@ -253,6 +248,10 @@ public class Review {
 
   /** Version for optimistic locking */
   @Version private Long version;
+
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(columnDefinition = "jsonb", name = "raw_json_data")
+  private String rawJsonData;
 
   // Business Logic Methods
   /** Determines if the review is positive (rating >= 7.0 for 10-point scale) */
@@ -314,11 +313,6 @@ public class Review {
   /** Checks if processing is complete */
   public boolean isProcessed() {
     return ProcessingStatus.PROCESSED.equals(this.processingStatus);
-  }
-
-  /** Checks if the review is a solo traveler review */
-  public boolean isSoloTraveler() {
-    return "Solo traveler".equalsIgnoreCase(reviewGroup);
   }
 
   /** Checks if the reviewer is experienced (has multiple reviews) */

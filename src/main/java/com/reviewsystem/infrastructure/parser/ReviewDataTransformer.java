@@ -38,11 +38,11 @@ public class ReviewDataTransformer {
               .hotelId(rawData.getHotelId())
               .hotelName(sanitizeHotelName(rawData.getHotelName()))
               .provider(provider)
-              .providerReviewId(extractproviderReviewId(rawData))
+              .hotelReviewId(extracthotelReviewId(rawData))
               .rating(extractRating(rawData))
-              .reviewText(extractcomment(rawData))
+              .reviewComments(extractcomment(rawData))
               .reviewDate(extractReviewDate(rawData))
-              .reviewerName(extractReviewerName(rawData))
+              .reviewerDisplayName(extractReviewerDisplayName(rawData))
               .reviewTitle(extractReviewTitle(rawData))
               .contentHash(generateContentHash(rawData))
               .createdAt(LocalDateTime.now())
@@ -70,7 +70,7 @@ public class ReviewDataTransformer {
   }
 
   /** Extract provider review ID from raw data */
-  private String extractproviderReviewId(RawReviewData rawData) {
+  private String extracthotelReviewId(RawReviewData rawData) {
     Map<String, Object> comment = rawData.getComment();
     if (comment == null) {
       throw new IllegalArgumentException("Comment data is null");
@@ -169,18 +169,18 @@ public class ReviewDataTransformer {
   }
 
   /** Extract reviewer name from raw data */
-  private String extractReviewerName(RawReviewData rawData) {
+  private String extractReviewerDisplayName(RawReviewData rawData) {
     Map<String, Object> comment = rawData.getComment();
     if (comment == null) {
       return null;
     }
 
-    Object reviewerName = comment.get("reviewerName");
-    if (reviewerName == null) {
+    Object reviewerDisplayName = comment.get("reviewerDisplayName");
+    if (reviewerDisplayName == null) {
       return null;
     }
 
-    String name = String.valueOf(reviewerName).trim();
+    String name = String.valueOf(reviewerDisplayName).trim();
     return name.isEmpty() ? null : name;
   }
 
@@ -251,28 +251,10 @@ public class ReviewDataTransformer {
     }
 
     // Extract additional fields that might be present
-    Object helpfulVotes = comment.get("helpfulVotes");
-    if (helpfulVotes instanceof Number) {
-      review.setHelpfulVotes(((Number) helpfulVotes).intValue());
-    }
-
-    Object totalVotes = comment.get("totalVotes");
-    if (totalVotes instanceof Number) {
-      review.setTotalVotes(((Number) totalVotes).intValue());
-    }
-
-    Object isVerified = comment.get("isVerified");
-    if (isVerified instanceof Boolean) {
-      review.setIsVerified((Boolean) isVerified);
-    }
-
-    Object reviewLanguage = comment.get("language");
+    Object reviewLanguage = comment.get("translateSource");
     if (reviewLanguage != null) {
-      review.setLanguage(String.valueOf(reviewLanguage));
+      review.setTranslateSource(String.valueOf(reviewLanguage));
     }
-
-    // Set line number for tracking
-    review.setSourceLineNumber(rawData.getLineNumber());
   }
 
   /** Validate transformed review */

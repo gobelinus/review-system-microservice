@@ -357,7 +357,7 @@ public class FileTrackingService {
 
     try {
       // First, count how many records will be deleted for logging
-      Long countToDelete = processedFileRepository.countByProcessedAtBefore(cutoffDate);
+      Long countToDelete = processedFileRepository.countByProcessingCompletedAtBefore(cutoffDate);
       log.info("Found {} processed file records to delete", countToDelete);
 
       if (countToDelete == 0) {
@@ -366,7 +366,7 @@ public class FileTrackingService {
       }
 
       // Delete the old records
-      Long deletedCount = processedFileRepository.deleteByProcessedAtBefore(cutoffDate);
+      Long deletedCount = processedFileRepository.deleteByProcessingCompletedAtBefore(cutoffDate);
 
       log.info("Successfully deleted {} old processed file records", deletedCount);
       return deletedCount;
@@ -406,7 +406,7 @@ public class FileTrackingService {
 
     try {
       Long todayCount =
-          processedFileRepository.countByStatusAndProcessedAtBetween(
+          processedFileRepository.countByProcessingStatusAndProcessingCompletedAtBetween(
               ProcessingStatus.COMPLETED, startOfDay, endOfDay);
       log.debug("Files processed today: {}", todayCount);
       return todayCount;

@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: Review System Microservice
+  datasource:
+    url: jdbc:postgresql://localhost:5432/reviewsystem
+    username: reviewuser
+    password: reviewpass
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect # Corrected: platform not provider
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          time_zone: UTC
+    defer-datasource-initialization: false
+
+  flyway:
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    locations: classpath:db/migration
+    enabled: true
+
+logging:
+  level:
+    org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration: DEBUG
+    com.zaxxer.hikari: DEBUG
+    org.springframework.boot.context.config.ConfigDataEnvironment: DEBUG
+    org.springframework.boot.autoconfigure: DEBUG
+    org.springframework.core.env: DEBUG
+    com.reviewsystem: DEBUG
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.transaction: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# S3 configuration (for testing with LocalStack)
+aws:
+  s3:
+    bucket-name: review-files
+    region: us-east-1
+    endpoint: http://localhost:4566  # LocalStack endpoint
+    path-prefix: reviews/
+    access-key: test
+    secret-key: test

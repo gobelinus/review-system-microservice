@@ -19,10 +19,10 @@ INSERT INTO provider (name, code, provider_type, external_id, is_active) VALUES
 ('Expedia.com', 'Expedia', 'HOTEL_BOOKING', 334, true);
 
 -- Create index for provider lookups
-CREATE INDEX idx_provider_provider_id ON provider(provider_id);
-CREATE INDEX idx_provider_type ON provider(provider_type);
+CREATE INDEX idx_provider_code ON provider(code);
+CREATE INDEX idx_provider_external_id ON provider(external_id);
 
 -- Add comments
 COMMENT ON TABLE provider IS 'Stores information about review providers like Agoda, Booking.com, etc.';
-COMMENT ON COLUMN provider.provider_id IS 'External provider ID from the JSON data';
+COMMENT ON COLUMN provider.external_id IS 'External provider ID from the JSON data';
 COMMENT ON COLUMN provider.provider_type IS 'Type of provider (HOTEL_BOOKING, FLIGHT, etc.)';

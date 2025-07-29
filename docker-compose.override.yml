@@ -1,0 +1,24 @@
+services:
+  review-system-app:
+    volumes:
+      # Mount source code for hot reload during development
+      - ./src:/app/src:ro
+      - ./target:/app/target
+    environment:
+      - SPRING_DEVTOOLS_RESTART_ENABLED=true
+      - SPRING_DEVTOOLS_LIVERELOAD_ENABLED=true
+    ports:
+      - "35729:35729"  # LiveReload port
+
+  postgres:
+    # Expose additional debugging port
+    environment:
+      - POSTGRES_LOG_STATEMENT=all
+      - POSTGRES_LOG_MIN_DURATION_STATEMENT=0
+
+  localstack:
+    # Enable additional AWS services for future use
+    environment:
+      - SERVICES=s3,sqs,sns,lambda
+      - DEBUG=1
+      - LS_LOG=trace

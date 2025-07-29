@@ -89,12 +89,11 @@ class ReviewRepositoryIntegrationTest {
           Review.builder()
               .provider(testProvider)
               .hotelId((i % 10) + 1)
-              .reviewerName("User " + i)
+              .reviewerDisplayName("User " + i)
               .rating(getRandomRating())
-              .reviewText("Review text " + i)
+              .reviewComments("Review text " + i)
               .reviewDate(LocalDateTime.now().minusDays(i % 30))
-              .language(i % 2 == 0 ? "en" : "fr")
-              .isVerified(i % 3 == 0)
+              .translateSource(i % 2 == 0 ? "en" : "fr")
               .build();
       reviewRepository.save(review);
     }
@@ -120,9 +119,9 @@ class ReviewRepositoryIntegrationTest {
         Review.builder()
             .provider(testProvider)
             .hotelId(1)
-            .reviewerName("Test User")
+            .reviewerDisplayName("Test User")
             .rating(getRandomRating())
-            .reviewText("Test review")
+            .reviewComments("Test review")
             .reviewDate(LocalDateTime.now())
             .build();
     reviewRepository.save(review);
@@ -171,9 +170,9 @@ class ReviewRepositoryIntegrationTest {
           Review.builder()
               .provider(provider)
               .hotelId((i % 5) + 1)
-              .reviewerName("User " + i)
+              .reviewerDisplayName("User " + i)
               .rating(getRandomRating())
-              .reviewText("Review " + i)
+              .reviewComments("Review " + i)
               .reviewDate(LocalDateTime.now().minusDays(i % 10))
               .build();
       reviewRepository.save(review);
@@ -182,7 +181,7 @@ class ReviewRepositoryIntegrationTest {
     // When
     long startTime = System.currentTimeMillis();
     List<Review> recentAgodaReviews =
-        reviewRepository.findRecentReviewsByprovider(
+        reviewRepository.findRecentReviewsByProvider(
             testProvider, LocalDateTime.now().minusDays(5));
     long endTime = System.currentTimeMillis();
 
@@ -208,9 +207,9 @@ class ReviewRepositoryIntegrationTest {
           Review.builder()
               .provider(testProvider)
               .hotelId(1)
-              .reviewerName("User " + i)
+              .reviewerDisplayName("User " + i)
               .rating(getRandomRating())
-              .reviewText("Batch review " + i)
+              .reviewComments("Batch review " + i)
               .reviewDate(LocalDateTime.now().minusMinutes(i))
               .build();
       reviews.add(review);

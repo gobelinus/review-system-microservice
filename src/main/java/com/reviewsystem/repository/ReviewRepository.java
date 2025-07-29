@@ -14,17 +14,17 @@ import org.springframework.data.repository.query.Param;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
   // Basic finder methods
-  Optional<Review> findByExternalIdAndprovider(String externalId, Provider provider);
+  Optional<Review> findByExternalIdAndProvider(String externalId, Provider provider);
 
-  boolean existsByExternalIdAndprovider(String externalId, Provider provider);
+  boolean existsByExternalIdAndProvider(String externalId, Provider provider);
 
-  List<Review> findByhotelId(String hotelId);
+  List<Review> findByHotelId(String hotelId);
 
-  Page<Review> findByhotelId(String hotelId, Pageable pageable);
+  Page<Review> findByHotelId(String hotelId, Pageable pageable);
 
-  List<Review> findByprovider(Provider provider);
+  List<Review> findByProvider(Provider provider);
 
-  Page<Review> findByprovider(Provider provider, Pageable pageable);
+  Page<Review> findByProvider(Provider provider, Pageable pageable);
 
   // Rating-based queries
   List<Review> findByRatingGreaterThanEqual(Double rating);
@@ -38,31 +38,33 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
       LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
   // Language-based queries
-  List<Review> findByLanguage(String language);
+  List<Review> findByLanguage(String translateSource);
 
   // Verification status
   List<Review> findByVerified(Boolean verified);
 
   // Custom JPQL queries
   @Query("SELECT r FROM Review r WHERE r.hotelId = :hotelId AND r.rating >= :minRating")
-  List<Review> findByhotelIdAndMinRating(
+  List<Review> findByHotelIdAndMinRating(
       @Param("hotelId") String hotelId, @Param("minRating") Double minRating);
 
   @Query(
       "SELECT r FROM Review r JOIN FETCH r.provider p WHERE p = :provider AND r.reviewDate > :fromDate ORDER BY r.reviewDate DESC")
-  List<Review> findRecentReviewsByprovider(
+  List<Review> findRecentReviewsByProvider(
       @Param("provider") Provider provider, @Param("fromDate") LocalDateTime fromDate);
 
   @Query("SELECT AVG(r.rating) FROM Review r WHERE r.hotelId = :hotelId")
-  Double findAverageRatingByhotelId(@Param("hotelId") String hotelId);
+  Double findAverageRatingByHotelId(@Param("hotelId") String hotelId);
 
   @Query("SELECT COUNT(r) FROM Review r WHERE r.hotelId = :hotelId")
-  Long countReviewsByhotelId(@Param("hotelId") String hotelId);
+  Long countReviewsByHotelId(@Param("hotelId") String hotelId);
 
   @Query(
-      "SELECT r FROM Review r WHERE r.hotelId = :hotelId AND r.language = :language ORDER BY r.reviewDate DESC")
-  Page<Review> findByhotelIdAndLanguageOrderByReviewDateDesc(
-      @Param("hotelId") String hotelId, @Param("language") String language, Pageable pageable);
+      "SELECT r FROM Review r WHERE r.hotelId = :hotelId AND r.translateSource = :translateSource ORDER BY r.reviewDate DESC")
+  Page<Review> findByHotelIdAndLanguageOrderByReviewDateDesc(
+      @Param("hotelId") String hotelId,
+      @Param("translateSource") String translateSource,
+      Pageable pageable);
 
   // Native query example for complex operations
   @Query(
@@ -76,4 +78,57 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
       @Param("startDate") LocalDateTime startDate,
       @Param("endDate") LocalDateTime endDate,
       @Param("minRating") Double minRating);
+
+  /** Check if a review exists by provider review ID to prevent duplicates */
+  boolean existsByProviderExternalId(String providerExternalId);
+
+  /** Check if a review exists by provider review ID to prevent duplicates */
+  boolean existsByProviderReviewId(String reviewerId);
+
+  /** Find reviews by hotel ID */
+  List<Review> findByHotelId(Integer hotelId);
+
+  /** Find reviews by provider ID */
+  List<Review> findByProviderId(Long providerId);
+
+  /** Find reviews by hotel ID and provider ID */
+  List<Review> findByHotelIdAndProviderId(Integer hotelId, Long providerId);
+
+  /** Find review by provider review ID */
+  Optional<Review> findByProviderExternalId(String hotelReviewId);
+
+  /** Find reviews created within a date range */
+  @Query("SELECT r FROM Review r WHERE r.createdAt BETWEEN :startDate AND :endDate")
+  List<Review> findByCreatedAtBetween(
+      @Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+  /** Find reviews by hotel name (case-insensitive) */
+  @Query("SELECT r FROM Review r WHERE LOWER(r.hotelName) LIKE LOWER(CONCAT('%', :hotelName, '%'))")
+  List<Review> findByHotelNameContainingIgnoreCase(@Param("hotelName") String hotelName);
+
+  /** Count reviews by provider */
+  @Query("SELECT COUNT(r) FROM Review r WHERE r.provider.id = :providerId")
+  Long countByProviderId(@Param("providerId") Long providerId);
+
+  /** Count reviews before cutoff */
+  Long countByCreatedAtBefore(LocalDateTime dateTime);
+
+  /** Count reviews by hotel */
+  Long countByHotelId(Integer hotelId);
+
+  /** Find recent reviews (last N days) */
+  @Query("SELECT r FROM Review r WHERE r.createdAt >= :cutoffDate ORDER BY r.createdAt DESC")
+  List<Review> findRecentReviews(@Param("cutoffDate") LocalDateTime cutoffDate);
+
+  /** Find reviews with rating above threshold */
+  @Query("SELECT r FROM Review r WHERE r.rating > :threshold ORDER BY r.rating DESC")
+  List<Review> findHighRatedReviews(@Param("threshold") Double threshold);
+
+  /** Delete reviews by provider review ID */
+  void deleteByProviderReviewId(String hotelReviewId);
+
+  /** Find duplicate reviews based on hotel ID and review content hash */
+  @Query("SELECT r FROM Review r WHERE r.hotelId = :hotelId AND r.contentHash = :contentHash")
+  List<Review> findPotentialDuplicates(
+      @Param("hotelId") Integer hotelId, @Param("contentHash") String contentHash);
 }

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
@@ -13,11 +14,11 @@ import org.springframework.validation.annotation.Validated;
 /** Configuration properties for AWS S3 service. */
 @Data
 @Builder
-// @NoArgsConstructor
-@AllArgsConstructor
 @Configuration
 @ConfigurationProperties(prefix = "aws.s3")
 @Validated
+@NoArgsConstructor
+@AllArgsConstructor
 public class S3Config {
 
   /** S3 bucket name where review files are stored. */

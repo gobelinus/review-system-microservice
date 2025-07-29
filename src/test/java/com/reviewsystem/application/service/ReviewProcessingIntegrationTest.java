@@ -5,10 +5,10 @@ import static org.assertj.core.api.Assertions.*;
 import com.reviewsystem.common.enums.ProcessingStatus;
 import com.reviewsystem.domain.entity.Provider;
 import com.reviewsystem.domain.entity.Review;
-import com.reviewsystem.domain.repository.ProviderRepository;
-import com.reviewsystem.domain.repository.ReviewRepository;
 import com.reviewsystem.infrastructure.parser.JsonLParser;
 import com.reviewsystem.infrastructure.parser.dto.RawReviewData;
+import com.reviewsystem.repository.ProviderRepository;
+import com.reviewsystem.repository.ReviewRepository;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -152,7 +152,7 @@ class ReviewProcessingIntegrationTest {
         Review.builder()
             .hotelId(999)
             .hotelName("Existing Hotel")
-            .providerReviewId("948353737") // Same ID as in test file
+            .hotelReviewId("948353737") // Same ID as in test file
             .build();
 
     Provider provider =

@@ -7,13 +7,13 @@ import com.reviewsystem.common.enums.ProcessingStatus;
 import com.reviewsystem.common.enums.ProviderType;
 import com.reviewsystem.domain.entity.Provider;
 import com.reviewsystem.domain.entity.Review;
-import com.reviewsystem.domain.repository.ProviderRepository;
-import com.reviewsystem.domain.repository.ReviewRepository;
 import com.reviewsystem.infrastructure.parser.ReviewDataTransformer;
 import com.reviewsystem.infrastructure.parser.ReviewDataValidator;
 import com.reviewsystem.infrastructure.parser.dto.RawReviewData;
 import com.reviewsystem.infrastructure.parser.dto.ValidationResult;
 import com.reviewsystem.presentation.exception.FileProcessingException;
+import com.reviewsystem.repository.ProviderRepository;
+import com.reviewsystem.repository.ReviewRepository;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -213,7 +213,7 @@ class ReviewProcessingServiceTest {
                   .hotelId(data.getHotelId())
                   .hotelName(data.getHotelName())
                   .provider(mockprovider)
-                  .providerReviewId("review-" + data.getHotelId())
+                  .hotelReviewId("review-" + data.getHotelId())
                   .build();
             });
     when(reviewRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
@@ -368,13 +368,13 @@ class ReviewProcessingServiceTest {
             .hotelId(1)
             .hotelName("Hotel 1")
             .provider(mockprovider)
-            .providerReviewId("review-1")
+            .hotelReviewId("review-1")
             .build(),
         Review.builder()
             .hotelId(2)
             .hotelName("Hotel 2")
             .provider(mockprovider)
-            .providerReviewId("review-2")
+            .hotelReviewId("review-2")
             .build());
   }
 
@@ -386,7 +386,7 @@ class ReviewProcessingServiceTest {
                     .hotelId(i)
                     .hotelName("Hotel " + i)
                     .provider(mockprovider)
-                    .providerReviewId("review-" + i)
+                    .hotelReviewId("review-" + i)
                     .build())
         .toList();
   }

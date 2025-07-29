@@ -1,0 +1,8 @@
+ALTER TABLE provider
+  ADD COLUMN api_endpoint VARCHAR(260),
+  ADD COLUMN description VARCHAR(500),
+  ADD COLUMN rating_scale DOUBLE PRECISION,
+  ADD COLUMN supported_languages VARCHAR(200);
+
+ALTER TABLE provider
+  ADD COLUMN version BIGINT NOT NULL DEFAULT 1;

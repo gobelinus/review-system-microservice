@@ -438,20 +438,6 @@ class ReviewEntityTest {
     }
 
     @Test
-    @DisplayName("Should check if reviewer is solo traveler")
-    void shouldCheckIfReviewerIsSoloTraveler() {
-      // Given
-      Review soloReview = Review.builder().reviewGroup("Solo traveler").build();
-      Review familyReview = Review.builder().reviewGroup("Family").build();
-      Review nullGroupReview = Review.builder().reviewGroup(null).build();
-
-      // When & Then
-      assertThat(soloReview.isSoloTraveler()).isTrue();
-      assertThat(familyReview.isSoloTraveler()).isFalse();
-      assertThat(nullGroupReview.isSoloTraveler()).isFalse();
-    }
-
-    @Test
     @DisplayName("Should check if reviewer is experienced")
     void shouldCheckIfReviewerIsExperienced() {
       // Given

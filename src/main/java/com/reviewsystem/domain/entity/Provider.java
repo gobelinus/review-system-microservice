@@ -15,7 +15,7 @@ import org.hibernate.annotations.UpdateTimestamp;
  */
 @Entity
 @Table(
-    name = "providers",
+    name = "provider",
     uniqueConstraints = {
       @UniqueConstraint(
           columnNames = {"code"},
@@ -46,6 +46,7 @@ public class Provider {
 
   /** Unique provider code (uppercase) */
   @Column(name = "code", nullable = false, length = 10, unique = true)
+  @Enumerated(EnumType.STRING)
   private ProviderType code;
 
   /** Externally linked id e.g. 322 etc as per json */
@@ -66,7 +67,7 @@ public class Provider {
   private String apiEndpoint;
 
   /** Whether the provider is currently active */
-  @Column(name = "active", nullable = false)
+  @Column(name = "is_active", nullable = false)
   @NotNull
   @Builder.Default
   private Boolean active = true;
@@ -79,7 +80,7 @@ public class Provider {
   private Double ratingScale = 5.0;
 
   /** Comma-separated list of supported translateSource codes */
-  @Column(name = "supported_translateSources", length = 200)
+  @Column(name = "supported_languages", length = 200)
   @Size(max = 200, message = "Supported translateSources must not exceed 200 characters")
   @Builder.Default
   private String supportedLanguages = "en";

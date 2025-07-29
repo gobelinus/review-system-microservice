@@ -47,17 +47,18 @@ public interface ProcessedFileRepository {
       String provider, LocalDateTime since, ProcessingStatus status);
 
   /** Count files by status and between times */
-  long countByStatusAndProcessedAtBetween(
+  long countByProcessingStatusAndProcessingCompletedAtBetween(
       ProcessingStatus status, LocalDateTime startTime, LocalDateTime endTime);
 
   /** Count files by status */
   long countByProcessingStatus(ProcessingStatus status);
 
   /** count all processed file before cutoff */
-  long countByProcessedAtBefore(LocalDateTime dateTime);
+  long countByProcessingCompletedAtBefore(LocalDateTime dateTime);
 
   /** Count files by status and before cutoff */
-  long countByStatusAndProcessedAtBefore(ProcessingStatus status, LocalDateTime startTime);
+  long countByStatusAndProcessingCompletedAtBefore(
+      ProcessingStatus status, LocalDateTime startTime);
 
   /** Count files by provider and status */
   long countByProviderAndProcessingStatus(String provider, ProcessingStatus status);
@@ -67,7 +68,7 @@ public interface ProcessedFileRepository {
       LocalDateTime cutoffDate, List<ProcessingStatus> statuses);
 
   /** Delete old processed file before cutoff */
-  Long deleteByProcessedAtBefore(LocalDateTime cutoffDate);
+  Long deleteByProcessingCompletedAtBefore(LocalDateTime cutoffDate);
 
   /** Find all records (mainly for testing) */
   List<ProcessedFile> findAll();
@@ -79,12 +80,12 @@ public interface ProcessedFileRepository {
   void deleteAll();
 
   /**
-   * Find the most recently processed file ordered by processedAt timestamp in descending order.
-   * Returns the latest processed file regardless of status.
+   * Find the most recently processed file ordered by processingCompletedAt timestamp in descending
+   * order. Returns the latest processed file regardless of status.
    *
    * @return Optional containing the most recently processed file, or empty if no files exist
    */
-  Optional<ProcessedFile> findTopByOrderByProcessedAtDesc();
+  Optional<ProcessedFile> findTopByOrderByProcessingCompletedAtDesc();
 
   /**
    * Count all processed files for today using existing method This default method calculates
@@ -98,8 +99,8 @@ public interface ProcessedFileRepository {
 
     // Use existing method by calculating:
     // total before end of day - total before start of day = today's count
-    long totalBeforeEndOfDay = countByProcessedAtBefore(endOfDay.plusNanos(1));
-    long totalBeforeStartOfDay = countByProcessedAtBefore(startOfDay);
+    long totalBeforeEndOfDay = countByProcessingCompletedAtBefore(endOfDay.plusNanos(1));
+    long totalBeforeStartOfDay = countByProcessingCompletedAtBefore(startOfDay);
 
     return totalBeforeEndOfDay - totalBeforeStartOfDay;
   }
@@ -114,7 +115,8 @@ public interface ProcessedFileRepository {
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
     LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
 
-    // Use existing countByStatusAndProcessedAtBetween method
-    return countByStatusAndProcessedAtBetween(ProcessingStatus.FAILED, startOfDay, endOfDay);
+    // Use existing countByProcessingStatusAndProcessingCompletedAtBetween method
+    return countByProcessingStatusAndProcessingCompletedAtBetween(
+        ProcessingStatus.FAILED, startOfDay, endOfDay);
   }
 }
