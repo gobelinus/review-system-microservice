@@ -24,7 +24,7 @@ import org.hibernate.annotations.UpdateTimestamp;
       @Index(name = "idx_review_hotel_id", columnList = "hotel_id"),
       @Index(name = "idx_review_rating", columnList = "rating"),
       @Index(name = "idx_review_date", columnList = "review_date"),
-      @Index(name = "idx_review_language", columnList = "language"),
+      @Index(name = "idx_review_translateSource", columnList = "translateSource"),
       @Index(name = "idx_review_created_at", columnList = "created_at"),
       @Index(name = "idx_review_content_hash", columnList = "content_hash")
     })
@@ -39,21 +39,6 @@ public class Review {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /** Provider review identifier (hotelReviewId from JSON) */
-  @Column(name = "provider_review_id", nullable = false, length = 100)
-  @NotBlank(message = "Provider review ID is required")
-  @Size(max = 100, message = "Provider review ID must not exceed 100 characters")
-  private String providerReviewId;
-
-  /** Provider that sourced this review */
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(
-      name = "provider_id",
-      nullable = false,
-      foreignKey = @ForeignKey(name = "fk_review_provider"))
-  @NotNull(message = "Provider is required")
-  private Provider provider;
-
   /** Hotel identifier */
   @Column(name = "hotel_id", nullable = false)
   @NotNull(message = "Hotel ID is required")
@@ -64,10 +49,27 @@ public class Review {
   @Size(max = 300, message = "Hotel name must not exceed 300 characters")
   private String hotelName;
 
-  /** Name of the guest who wrote the review (displayMemberName from reviewerInfo) */
-  @Column(name = "reviewer_name", length = 200)
-  @Size(max = 200, message = "Reviewer name must not exceed 200 characters")
-  private String reviewerName;
+  /** Provider that sourced this review */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(
+      name = "provider_id",
+      nullable = false,
+      foreignKey = @ForeignKey(name = "fk_review_provider"))
+  @NotNull(message = "Provider is required")
+  private Provider provider;
+
+  @Column(name = "platform", nullable = false, length = 100)
+  private String platform;
+
+  /** Provider review identifier (hotelReviewId from JSON) */
+  @Column(name = "provider_review_id", nullable = false, length = 100)
+  @NotBlank(message = "Provider review ID is required")
+  @Size(max = 100, message = "Provider review ID must not exceed 100 characters")
+  private String hotelReviewId;
+
+  /** Provider ID from the JSON */
+  @Column(name = "provider_external_id")
+  private String providerExternalId;
 
   /** Rating score from the original provider scale */
   @Column(name = "rating", nullable = false)
@@ -87,76 +89,14 @@ public class Review {
   private String ratingText;
 
   /** Review text content (reviewComments from JSON) */
-  @Column(name = "review_text", columnDefinition = "TEXT")
+  @Column(name = "review_comments", columnDefinition = "TEXT")
   @Size(max = 10000, message = "Review text must not exceed 10000 characters")
-  private String reviewText;
+  private String reviewComments;
 
   /** Review title */
   @Column(name = "review_title", length = 500)
   @Size(max = 500, message = "Review title must not exceed 500 characters")
   private String reviewTitle;
-
-  /** Date when the review was originally posted */
-  @Column(name = "review_date", nullable = false)
-  @NotNull(message = "Review date is required")
-  @PastOrPresent(message = "Review date cannot be in the future")
-  private LocalDateTime reviewDate;
-
-  /** Formatted review date as provided by provider */
-  @Column(name = "formatted_review_date", length = 50)
-  @Size(max = 50, message = "Formatted review date must not exceed 50 characters")
-  private String formattedReviewDate;
-
-  /** Language code of the review (ISO 639-1) */
-  @Column(name = "language", length = 10)
-  @Pattern(
-      regexp = "^[a-z]{2}(-[A-Z]{2})?$",
-      message = "Language must be in ISO 639-1 format (e.g., 'en', 'en-US')")
-  private String language;
-
-  /** Check-in date month and year */
-  @Column(name = "checkin_date", length = 50)
-  @Size(max = 50, message = "Check-in date must not exceed 50 characters")
-  private String checkinDate;
-
-  /** Room type from reviewerInfo */
-  @Column(name = "room_type", length = 200)
-  @Size(max = 200, message = "Room type must not exceed 200 characters")
-  private String roomType;
-
-  /** Review group (e.g., "Solo traveler", "Family") */
-  @Column(name = "review_group", length = 100)
-  @Size(max = 100, message = "Review group must not exceed 100 characters")
-  private String reviewGroup;
-
-  /** Reviewer's country */
-  @Column(name = "reviewer_country", length = 100)
-  @Size(max = 100, message = "Reviewer country must not exceed 100 characters")
-  private String reviewerCountry;
-
-  /** Length of stay in days */
-  @Column(name = "length_of_stay")
-  @Min(value = 0, message = "Length of stay cannot be negative")
-  private Integer lengthOfStay;
-
-  /** Number of reviews by this reviewer */
-  @Column(name = "reviewer_review_count")
-  @Min(value = 0, message = "Reviewer review count cannot be negative")
-  private Integer reviewerReviewCount;
-
-  /** Whether reviewer is an expert */
-  @Column(name = "is_expert_reviewer")
-  @Builder.Default
-  private Boolean isExpertReviewer = false;
-
-  /** Provider ID from the JSON */
-  @Column(name = "provider_external_id")
-  private Integer providerExternalId;
-
-  /** Encrypted review data if available */
-  @Column(name = "encrypted_data", length = 500)
-  @Size(max = 500, message = "Encrypted data must not exceed 500 characters")
-  private String encryptedData;
 
   /** Review negatives text */
   @Column(name = "review_negatives", columnDefinition = "TEXT")
@@ -178,12 +118,12 @@ public class Review {
   @Size(max = 10000, message = "Original comment must not exceed 10000 characters")
   private String originalComment;
 
-  /** Translation source language */
+  /** Translation source translateSource */
   @Column(name = "translate_source", length = 10)
   @Size(max = 10, message = "Translate source must not exceed 10 characters")
   private String translateSource;
 
-  /** Translation target language */
+  /** Translation target translateSource */
   @Column(name = "translate_target", length = 10)
   @Size(max = 10, message = "Translate target must not exceed 10 characters")
   private String translateTarget;
@@ -193,24 +133,107 @@ public class Review {
   @Size(max = 64, message = "Content hash must not exceed 64 characters")
   private String contentHash;
 
-  /** Source line number from import file */
-  @Column(name = "source_line_number")
-  private Integer sourceLineNumber;
+  /** Date when the review was originally posted */
+  @Column(name = "review_date", nullable = false)
+  @NotNull(message = "Review date is required")
+  @PastOrPresent(message = "Review date cannot be in the future")
+  private LocalDateTime reviewDate;
 
-  /** Number of helpful votes */
-  @Column(name = "helpful_votes")
-  @Min(value = 0, message = "Helpful votes cannot be negative")
-  private Integer helpfulVotes;
+  /** Formatted review date as provided by provider */
+  @Column(name = "formatted_review_date", length = 50)
+  @Size(max = 50, message = "Formatted review date must not exceed 50 characters")
+  private String formattedReviewDate;
 
-  /** Total votes received */
-  @Column(name = "total_votes")
-  @Min(value = 0, message = "Total votes cannot be negative")
-  private Integer totalVotes;
+  /** Check-in date month and year */
+  @Column(name = "check_in_date_month_and_year", length = 50)
+  @Size(max = 50, message = "Check-in date must not exceed 50 characters")
+  private String checkinDate;
 
-  /** Whether the review is verified */
-  @Column(name = "is_verified", nullable = false)
+  // Reviewer Information
+  @Column(name = "reviewer_display_name", length = 200)
+  private String reviewerDisplayName;
+
+  @Column(name = "reviewer_country_name", length = 100)
+  private String reviewerCountryName;
+
+  @Column(name = "reviewer_country_id")
+  private Integer reviewerCountryId;
+
+  @Column(name = "reviewer_flag_name", length = 10)
+  private String reviewerFlagName;
+
+  @Column(name = "review_group_name", length = 100)
+  private String reviewGroupName;
+
+  @Column(name = "review_group_id")
+  private Integer reviewGroupId;
+
+  @Column(name = "room_type_name", length = 200)
+  private String roomTypeName;
+
+  @Column(name = "room_type_id")
+  private Integer roomTypeId;
+
+  @Column(name = "length_of_stay")
+  @Min(value = 0, message = "Length of stay cannot be negative")
+  private Integer lengthOfStay;
+
+  @Column(name = "is_show_global_icon", nullable = false)
+  @Builder.Default // Default value as per table definition
+  private Boolean isShowGlobalIcon = false;
+
+  @Column(name = "is_show_reviewed_count", nullable = false)
+  @Builder.Default // Default value as per table definition
+  private Boolean isShowReviewedCount = false;
+
+  // Response Information
+  @Column(name = "is_show_review_response", nullable = false)
+  @Builder.Default // Default value as per table definition
+  private Boolean isShowReviewResponse = false;
+
+  @Column(name = "responder_name", length = 200)
+  private String responderName;
+
+  @Column(name = "response_date_text", length = 100)
+  private String responseDateText;
+
+  @Column(name = "formatted_response_date", length = 100)
+  private String formattedResponseDate;
+
+  @Column(name = "response_translate_source", length = 10)
+  private String responseTranslateSource;
+
+  // Provider Specific
+  @Column(name = "review_provider_logo", length = 500)
+  private String reviewProviderLogo;
+
+  @Column(name = "review_provider_text", length = 100)
+  private String reviewProviderText;
+
+  /** Room type from reviewerInfo */
+  @Column(name = "room_type", length = 200)
+  @Size(max = 200, message = "Room type must not exceed 200 characters")
+  private String roomType;
+
+  /** Review group (e.g., "Solo traveler", "Family") */
+  @Column(name = "review_group", length = 100)
+  @Size(max = 100, message = "Review group must not exceed 100 characters")
+  private String reviewGroup;
+
+  /** Number of reviews by this reviewer */
+  @Column(name = "reviewer_review_count")
+  @Min(value = 0, message = "Reviewer review count cannot be negative")
+  private Integer reviewerReviewCount;
+
+  /** Whether reviewer is an expert */
+  @Column(name = "is_expert_reviewer")
   @Builder.Default
-  private Boolean isVerified = false;
+  private Boolean isExpertReviewer = false;
+
+  /** Encrypted review data if available */
+  @Column(name = "encrypted_review_data", length = 500)
+  @Size(max = 500, message = "Encrypted data must not exceed 500 characters")
+  private String encryptedReviewData;
 
   /** Processing status */
   @Enumerated(EnumType.STRING)
@@ -232,7 +255,6 @@ public class Review {
   @Version private Long version;
 
   // Business Logic Methods
-
   /** Determines if the review is positive (rating >= 7.0 for 10-point scale) */
   public boolean isPositive() {
     return rating != null && rating >= 7.0;
@@ -263,7 +285,7 @@ public class Review {
 
   /** Checks if the review has meaningful text content */
   public boolean hasTextContent() {
-    return reviewText != null && !reviewText.trim().isEmpty();
+    return reviewComments != null && !reviewComments.trim().isEmpty();
   }
 
   /** Checks if the review has a title */
@@ -273,10 +295,10 @@ public class Review {
 
   /** Generates a unique business key for deduplication */
   public String getBusinessKey() {
-    if (provider == null || providerReviewId == null) {
+    if (provider == null || hotelReviewId == null) {
       return null;
     }
-    return provider.getName() + ":" + providerReviewId;
+    return provider.getName() + ":" + hotelReviewId;
   }
 
   /** Marks the review as processed */
@@ -304,16 +326,7 @@ public class Review {
     return reviewerReviewCount != null && reviewerReviewCount > 5;
   }
 
-  /** Gets the helpful vote percentage */
-  public double getHelpfulVotePercentage() {
-    if (totalVotes == null || totalVotes == 0 || helpfulVotes == null) {
-      return 0.0;
-    }
-    return (helpfulVotes.doubleValue() / totalVotes.doubleValue()) * 100.0;
-  }
-
   // Relationship Management
-
   /** Sets the provider and maintains bidirectional relationship */
   public void setProvider(Provider provider) {
     if (this.provider == provider) return;
@@ -336,9 +349,9 @@ public class Review {
     if (id != null && review.id != null) {
       return id.equals(review.id);
     }
-    // Fallback: use providerReviewId + provider name if both are set
-    return providerReviewId != null
-        && providerReviewId.equals(review.providerReviewId)
+    // Fallback: use hotelReviewId + provider name if both are set
+    return hotelReviewId != null
+        && hotelReviewId.equals(review.hotelReviewId)
         && provider != null
         && review.provider != null
         && provider.getName() != null
@@ -348,7 +361,7 @@ public class Review {
   @Override
   public int hashCode() {
     if (id != null) return id.hashCode();
-    int result = providerReviewId != null ? providerReviewId.hashCode() : 0;
+    int result = hotelReviewId != null ? hotelReviewId.hashCode() : 0;
     result =
         31 * result
             + (provider != null && provider.getName() != null ? provider.getName().hashCode() : 0);
@@ -358,8 +371,8 @@ public class Review {
   @Override
   public String toString() {
     return String.format(
-        "Review{id=%d, providerReviewId='%s', hotelId=%d, hotelName='%s', rating=%.1f, language='%s', processingStatus=%s}",
-        id, providerReviewId, hotelId, hotelName, rating, language, processingStatus);
+        "Review{id=%d, hotelReviewId='%s', hotelId=%d, hotelName='%s', rating=%.1f, translateSource='%s', processingStatus=%s}",
+        id, hotelReviewId, hotelId, hotelName, rating, translateSource, processingStatus);
   }
 
   /** Processing status enumeration */

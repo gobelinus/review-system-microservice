@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -43,291 +45,306 @@ class HealthIndicatorsTest {
     processingHealthIndicator = new ProcessingHealthIndicator(processingOrchestrationService);
   }
 
-  @Test
-  void s3HealthIndicator_ShouldReturnUp_WhenS3IsHealthy() {
-    // Given
-    when(s3Service.checkConnectivity()).thenReturn(true);
-    when(s3Service.getBucketName()).thenReturn("test-bucket");
-    when(s3Service.getRegion()).thenReturn("us-east-1");
+  @Nested
+  @DisplayName("S3 Health Check Tests")
+  class S3HealthChecksTest {
+    @Test
+    void s3HealthIndicator_ShouldReturnUp_WhenS3IsHealthy() {
+      // Given
+      when(s3Service.checkConnectivity()).thenReturn(true);
+      when(s3Service.getBucketName()).thenReturn("test-bucket");
+      when(s3Service.getRegion()).thenReturn("us-east-1");
 
-    // When
-    Health health = s3HealthIndicator.health();
+      // When
+      Health health = s3HealthIndicator.health();
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.UP);
-    assertThat(health.getDetails()).containsEntry("bucket", "test-bucket");
-    assertThat(health.getDetails()).containsEntry("region", "us-east-1");
-    assertThat(health.getDetails()).containsKey("lastChecked");
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.UP);
+      assertThat(health.getDetails()).containsEntry("bucket", "test-bucket");
+      assertThat(health.getDetails()).containsEntry("region", "us-east-1");
+      assertThat(health.getDetails()).containsKey("lastChecked");
 
-    verify(s3Service).checkConnectivity();
-    verify(s3Service).getBucketName();
-    verify(s3Service).getRegion();
+      verify(s3Service).checkConnectivity();
+      verify(s3Service).getBucketName();
+      verify(s3Service).getRegion();
+    }
+
+    @Test
+    void s3HealthIndicator_ShouldReturnDown_WhenS3IsUnhealthy() {
+      // Given
+      when(s3Service.checkConnectivity()).thenReturn(false);
+      when(s3Service.getBucketName()).thenReturn("test-bucket");
+
+      // When
+      Health health = s3HealthIndicator.health();
+
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.DOWN);
+      assertThat(health.getDetails()).containsEntry("bucket", "test-bucket");
+      assertThat(health.getDetails()).containsEntry("error", "S3 connectivity check failed");
+      assertThat(health.getDetails()).containsKey("lastChecked");
+
+      verify(s3Service).checkConnectivity();
+      verify(s3Service).getBucketName();
+    }
+
+    @Test
+    void s3HealthIndicator_ShouldReturnDown_WhenS3ThrowsException() {
+      // Given
+      when(s3Service.checkConnectivity()).thenThrow(new RuntimeException("Connection timeout"));
+      when(s3Service.getBucketName()).thenReturn("test-bucket");
+
+      // When
+      Health health = s3HealthIndicator.health();
+
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.DOWN);
+      assertThat(health.getDetails()).containsEntry("bucket", "test-bucket");
+      assertThat(health.getDetails()).containsEntry("error", "Connection timeout");
+      assertThat(health.getDetails()).containsKey("lastChecked");
+
+      verify(s3Service).checkConnectivity();
+      verify(s3Service).getBucketName();
+    }
   }
 
-  @Test
-  void s3HealthIndicator_ShouldReturnDown_WhenS3IsUnhealthy() {
-    // Given
-    when(s3Service.checkConnectivity()).thenReturn(false);
-    when(s3Service.getBucketName()).thenReturn("test-bucket");
+  @Nested
+  @DisplayName("DB Health Check Tests")
+  class DatabaseHealthChecksTest {
 
-    // When
-    Health health = s3HealthIndicator.health();
+    @Test
+    void databaseHealthIndicator_ShouldReturnUp_WhenDatabaseIsHealthy() throws SQLException {
+      // Given
+      when(dataSource.getConnection()).thenReturn(connection);
+      when(connection.isValid(5)).thenReturn(true);
+      when(connection.getMetaData()).thenReturn(mock(java.sql.DatabaseMetaData.class));
+      when(connection.getMetaData().getURL())
+          .thenReturn("jdbc:postgresql://localhost:5432/reviewdb");
+      when(connection.getMetaData().getDatabaseProductName()).thenReturn("PostgreSQL");
+      when(connection.getMetaData().getDatabaseProductVersion()).thenReturn("13.4");
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-    assertThat(health.getDetails()).containsEntry("bucket", "test-bucket");
-    assertThat(health.getDetails()).containsEntry("error", "S3 connectivity check failed");
-    assertThat(health.getDetails()).containsKey("lastChecked");
+      // When
+      Health health = databaseHealthIndicator.health();
 
-    verify(s3Service).checkConnectivity();
-    verify(s3Service).getBucketName();
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.UP);
+      assertThat(health.getDetails()).containsEntry("database", "PostgreSQL");
+      assertThat(health.getDetails()).containsEntry("version", "13.4");
+      assertThat(health.getDetails())
+          .containsEntry("url", "jdbc:postgresql://localhost:5432/reviewdb");
+      assertThat(health.getDetails()).containsKey("lastChecked");
+
+      verify(dataSource).getConnection();
+      verify(connection).isValid(5);
+      verify(connection).close();
+    }
+
+    @Test
+    void databaseHealthIndicator_ShouldReturnDown_WhenDatabaseIsUnhealthy() throws SQLException {
+      // Given
+      when(dataSource.getConnection()).thenReturn(connection);
+      when(connection.isValid(5)).thenReturn(false);
+
+      // When
+      Health health = databaseHealthIndicator.health();
+
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.DOWN);
+      assertThat(health.getDetails()).containsEntry("error", "Database connection is not valid");
+      assertThat(health.getDetails()).containsKey("lastChecked");
+
+      verify(dataSource).getConnection();
+      verify(connection).isValid(5);
+      verify(connection).close();
+    }
+
+    @Test
+    void databaseHealthIndicator_ShouldReturnDown_WhenSQLExceptionThrown() throws SQLException {
+      // Given
+      when(dataSource.getConnection()).thenThrow(new SQLException("Connection pool exhausted"));
+
+      // When
+      Health health = databaseHealthIndicator.health();
+
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.DOWN);
+      assertThat(health.getDetails()).containsEntry("error", "Connection pool exhausted");
+      assertThat(health.getDetails()).containsKey("lastChecked");
+
+      verify(dataSource).getConnection();
+    }
   }
 
-  @Test
-  void s3HealthIndicator_ShouldReturnDown_WhenS3ThrowsException() {
-    // Given
-    when(s3Service.checkConnectivity()).thenThrow(new RuntimeException("Connection timeout"));
-    when(s3Service.getBucketName()).thenReturn("test-bucket");
+  @Nested
+  @DisplayName("Processing Health Check Tests")
+  class ProcessingHealthChecksTest {
 
-    // When
-    Health health = s3HealthIndicator.health();
+    @Test
+    void processingHealthIndicator_ShouldReturnUp_WhenProcessingIsHealthy() {
+      // Given
+      Map<String, Object> processingStatus = new HashMap<>();
+      processingStatus.put("status", "IDLE");
+      processingStatus.put("activeProcesses", 0);
+      processingStatus.put("lastProcessing", LocalDateTime.now().minusHours(1));
+      processingStatus.put("totalProcessedToday", 1500);
+      processingStatus.put("failedProcessesToday", 2);
+      processingStatus.put("queueSize", 0);
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-    assertThat(health.getDetails()).containsEntry("bucket", "test-bucket");
-    assertThat(health.getDetails()).containsEntry("error", "Connection timeout");
-    assertThat(health.getDetails()).containsKey("lastChecked");
+      when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
 
-    verify(s3Service).checkConnectivity();
-    verify(s3Service).getBucketName();
-  }
+      // When
+      Health health = processingHealthIndicator.health();
 
-  @Test
-  void databaseHealthIndicator_ShouldReturnUp_WhenDatabaseIsHealthy() throws SQLException {
-    // Given
-    when(dataSource.getConnection()).thenReturn(connection);
-    when(connection.isValid(5)).thenReturn(true);
-    when(connection.getMetaData()).thenReturn(mock(java.sql.DatabaseMetaData.class));
-    when(connection.getMetaData().getURL()).thenReturn("jdbc:postgresql://localhost:5432/reviewdb");
-    when(connection.getMetaData().getDatabaseProductName()).thenReturn("PostgreSQL");
-    when(connection.getMetaData().getDatabaseProductVersion()).thenReturn("13.4");
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.UP);
+      assertThat(health.getDetails()).containsEntry("status", "IDLE");
+      assertThat(health.getDetails()).containsEntry("activeProcesses", 0);
+      assertThat(health.getDetails()).containsEntry("totalProcessedToday", 1500);
+      assertThat(health.getDetails()).containsEntry("failedProcessesToday", 2);
+      assertThat(health.getDetails()).containsEntry("queueSize", 0);
+      assertThat(health.getDetails()).containsKey("lastChecked");
 
-    // When
-    Health health = databaseHealthIndicator.health();
+      verify(processingOrchestrationService).getProcessingHealthStatus();
+    }
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.UP);
-    assertThat(health.getDetails()).containsEntry("database", "PostgreSQL");
-    assertThat(health.getDetails()).containsEntry("version", "13.4");
-    assertThat(health.getDetails())
-        .containsEntry("url", "jdbc:postgresql://localhost:5432/reviewdb");
-    assertThat(health.getDetails()).containsKey("lastChecked");
+    @Test
+    void processingHealthIndicator_ShouldReturnDown_WhenTooManyFailures() {
+      // Given
+      Map<String, Object> processingStatus = new HashMap<>();
+      processingStatus.put("status", "ERROR");
+      processingStatus.put("activeProcesses", 0);
+      processingStatus.put("lastProcessing", LocalDateTime.now().minusMinutes(30));
+      processingStatus.put("totalProcessedToday", 100);
+      processingStatus.put("failedProcessesToday", 50); // High failure rate
+      processingStatus.put("queueSize", 25);
 
-    verify(dataSource).getConnection();
-    verify(connection).isValid(5);
-    verify(connection).close();
-  }
+      when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
 
-  @Test
-  void databaseHealthIndicator_ShouldReturnDown_WhenDatabaseIsUnhealthy() throws SQLException {
-    // Given
-    when(dataSource.getConnection()).thenReturn(connection);
-    when(connection.isValid(5)).thenReturn(false);
+      // When
+      Health health = processingHealthIndicator.health();
 
-    // When
-    Health health = databaseHealthIndicator.health();
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.DOWN);
+      assertThat(health.getDetails()).containsEntry("status", "ERROR");
+      assertThat(health.getDetails()).containsEntry("failedProcessesToday", 50);
+      assertThat(health.getDetails()).containsEntry("reason", "High failure rate detected");
+      assertThat(health.getDetails()).containsKey("lastChecked");
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-    assertThat(health.getDetails()).containsEntry("error", "Database connection is not valid");
-    assertThat(health.getDetails()).containsKey("lastChecked");
+      verify(processingOrchestrationService).getProcessingHealthStatus();
+    }
 
-    verify(dataSource).getConnection();
-    verify(connection).isValid(5);
-    verify(connection).close();
-  }
+    @Test
+    void processingHealthIndicator_ShouldReturnDown_WhenQueueIsFull() {
+      // Given
+      Map<String, Object> processingStatus = new HashMap<>();
+      processingStatus.put("status", "RUNNING");
+      processingStatus.put("activeProcesses", 3);
+      processingStatus.put("lastProcessing", LocalDateTime.now().minusMinutes(5));
+      processingStatus.put("totalProcessedToday", 500);
+      processingStatus.put("failedProcessesToday", 5);
+      processingStatus.put("queueSize", 1000); // Queue is full
 
-  @Test
-  void databaseHealthIndicator_ShouldReturnDown_WhenSQLExceptionThrown() throws SQLException {
-    // Given
-    when(dataSource.getConnection()).thenThrow(new SQLException("Connection pool exhausted"));
+      when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
 
-    // When
-    Health health = databaseHealthIndicator.health();
+      // When
+      Health health = processingHealthIndicator.health();
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-    assertThat(health.getDetails()).containsEntry("error", "Connection pool exhausted");
-    assertThat(health.getDetails()).containsKey("lastChecked");
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.DOWN);
+      assertThat(health.getDetails()).containsEntry("queueSize", 1000);
+      assertThat(health.getDetails()).containsEntry("reason", "Processing queue is full");
+      assertThat(health.getDetails()).containsKey("lastChecked");
 
-    verify(dataSource).getConnection();
-  }
+      verify(processingOrchestrationService).getProcessingHealthStatus();
+    }
 
-  @Test
-  void processingHealthIndicator_ShouldReturnUp_WhenProcessingIsHealthy() {
-    // Given
-    Map<String, Object> processingStatus = new HashMap<>();
-    processingStatus.put("status", "IDLE");
-    processingStatus.put("activeProcesses", 0);
-    processingStatus.put("lastProcessing", LocalDateTime.now().minusHours(1));
-    processingStatus.put("totalProcessedToday", 1500);
-    processingStatus.put("failedProcessesToday", 2);
-    processingStatus.put("queueSize", 0);
+    @Test
+    void processingHealthIndicator_ShouldReturnDown_WhenServiceThrowsException() {
+      // Given
+      when(processingOrchestrationService.getProcessingHealthStatus())
+          .thenThrow(new RuntimeException("Service unavailable"));
 
-    when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
+      // When
+      Health health = processingHealthIndicator.health();
 
-    // When
-    Health health = processingHealthIndicator.health();
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.DOWN);
+      assertThat(health.getDetails()).containsEntry("error", "Service unavailable");
+      assertThat(health.getDetails()).containsKey("lastChecked");
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.UP);
-    assertThat(health.getDetails()).containsEntry("status", "IDLE");
-    assertThat(health.getDetails()).containsEntry("activeProcesses", 0);
-    assertThat(health.getDetails()).containsEntry("totalProcessedToday", 1500);
-    assertThat(health.getDetails()).containsEntry("failedProcessesToday", 2);
-    assertThat(health.getDetails()).containsEntry("queueSize", 0);
-    assertThat(health.getDetails()).containsKey("lastChecked");
+      verify(processingOrchestrationService).getProcessingHealthStatus();
+    }
 
-    verify(processingOrchestrationService).getProcessingHealthStatus();
-  }
+    @Test
+    void processingHealthIndicator_ShouldReturnUp_WhenProcessingIsRunning() {
+      // Given
+      Map<String, Object> processingStatus = new HashMap<>();
+      processingStatus.put("status", "RUNNING");
+      processingStatus.put("activeProcesses", 2);
+      processingStatus.put("lastProcessing", LocalDateTime.now().minusMinutes(2));
+      processingStatus.put("totalProcessedToday", 800);
+      processingStatus.put("failedProcessesToday", 5);
+      processingStatus.put("queueSize", 15);
 
-  @Test
-  void processingHealthIndicator_ShouldReturnDown_WhenTooManyFailures() {
-    // Given
-    Map<String, Object> processingStatus = new HashMap<>();
-    processingStatus.put("status", "ERROR");
-    processingStatus.put("activeProcesses", 0);
-    processingStatus.put("lastProcessing", LocalDateTime.now().minusMinutes(30));
-    processingStatus.put("totalProcessedToday", 100);
-    processingStatus.put("failedProcessesToday", 50); // High failure rate
-    processingStatus.put("queueSize", 25);
+      when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
 
-    when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
+      // When
+      Health health = processingHealthIndicator.health();
 
-    // When
-    Health health = processingHealthIndicator.health();
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.UP);
+      assertThat(health.getDetails()).containsEntry("status", "RUNNING");
+      assertThat(health.getDetails()).containsEntry("activeProcesses", 2);
+      assertThat(health.getDetails()).containsEntry("queueSize", 15);
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-    assertThat(health.getDetails()).containsEntry("status", "ERROR");
-    assertThat(health.getDetails()).containsEntry("failedProcessesToday", 50);
-    assertThat(health.getDetails()).containsEntry("reason", "High failure rate detected");
-    assertThat(health.getDetails()).containsKey("lastChecked");
+      verify(processingOrchestrationService).getProcessingHealthStatus();
+    }
 
-    verify(processingOrchestrationService).getProcessingHealthStatus();
-  }
+    @Test
+    void processingHealthIndicator_ShouldReturnOutOfService_WhenProcessingIsPaused() {
+      // Given
+      Map<String, Object> processingStatus = new HashMap<>();
+      processingStatus.put("status", "PAUSED");
+      processingStatus.put("activeProcesses", 0);
+      processingStatus.put("lastProcessing", LocalDateTime.now().minusHours(2));
+      processingStatus.put("totalProcessedToday", 300);
+      processingStatus.put("failedProcessesToday", 0);
+      processingStatus.put("queueSize", 0);
 
-  @Test
-  void processingHealthIndicator_ShouldReturnDown_WhenQueueIsFull() {
-    // Given
-    Map<String, Object> processingStatus = new HashMap<>();
-    processingStatus.put("status", "RUNNING");
-    processingStatus.put("activeProcesses", 3);
-    processingStatus.put("lastProcessing", LocalDateTime.now().minusMinutes(5));
-    processingStatus.put("totalProcessedToday", 500);
-    processingStatus.put("failedProcessesToday", 5);
-    processingStatus.put("queueSize", 1000); // Queue is full
+      when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
 
-    when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
+      // When
+      Health health = processingHealthIndicator.health();
 
-    // When
-    Health health = processingHealthIndicator.health();
+      // Then
+      assertThat(health.getStatus()).isEqualTo(Status.OUT_OF_SERVICE);
+      assertThat(health.getDetails()).containsEntry("status", "PAUSED");
+      assertThat(health.getDetails())
+          .containsEntry("reason", "Processing is administratively paused");
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-    assertThat(health.getDetails()).containsEntry("queueSize", 1000);
-    assertThat(health.getDetails()).containsEntry("reason", "Processing queue is full");
-    assertThat(health.getDetails()).containsKey("lastChecked");
+      verify(processingOrchestrationService).getProcessingHealthStatus();
+    }
 
-    verify(processingOrchestrationService).getProcessingHealthStatus();
-  }
+    @Test
+    void processingHealthIndicator_ShouldIncludeTimestampInDetails() {
+      // Given
+      Map<String, Object> processingStatus = new HashMap<>();
+      processingStatus.put("status", "IDLE");
+      processingStatus.put("activeProcesses", 0);
+      processingStatus.put("queueSize", 0);
 
-  @Test
-  void processingHealthIndicator_ShouldReturnDown_WhenServiceThrowsException() {
-    // Given
-    when(processingOrchestrationService.getProcessingHealthStatus())
-        .thenThrow(new RuntimeException("Service unavailable"));
+      when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
 
-    // When
-    Health health = processingHealthIndicator.health();
+      // When
+      Health health = processingHealthIndicator.health();
 
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.DOWN);
-    assertThat(health.getDetails()).containsEntry("error", "Service unavailable");
-    assertThat(health.getDetails()).containsKey("lastChecked");
+      // Then
+      assertThat(health.getDetails()).containsKey("lastChecked");
+      assertThat(health.getDetails().get("lastChecked")).isInstanceOf(LocalDateTime.class);
 
-    verify(processingOrchestrationService).getProcessingHealthStatus();
-  }
-
-  @Test
-  void processingHealthIndicator_ShouldReturnUp_WhenProcessingIsRunning() {
-    // Given
-    Map<String, Object> processingStatus = new HashMap<>();
-    processingStatus.put("status", "RUNNING");
-    processingStatus.put("activeProcesses", 2);
-    processingStatus.put("lastProcessing", LocalDateTime.now().minusMinutes(2));
-    processingStatus.put("totalProcessedToday", 800);
-    processingStatus.put("failedProcessesToday", 5);
-    processingStatus.put("queueSize", 15);
-
-    when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
-
-    // When
-    Health health = processingHealthIndicator.health();
-
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.UP);
-    assertThat(health.getDetails()).containsEntry("status", "RUNNING");
-    assertThat(health.getDetails()).containsEntry("activeProcesses", 2);
-    assertThat(health.getDetails()).containsEntry("queueSize", 15);
-
-    verify(processingOrchestrationService).getProcessingHealthStatus();
-  }
-
-  @Test
-  void processingHealthIndicator_ShouldReturnOutOfService_WhenProcessingIsPaused() {
-    // Given
-    Map<String, Object> processingStatus = new HashMap<>();
-    processingStatus.put("status", "PAUSED");
-    processingStatus.put("activeProcesses", 0);
-    processingStatus.put("lastProcessing", LocalDateTime.now().minusHours(2));
-    processingStatus.put("totalProcessedToday", 300);
-    processingStatus.put("failedProcessesToday", 0);
-    processingStatus.put("queueSize", 0);
-
-    when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
-
-    // When
-    Health health = processingHealthIndicator.health();
-
-    // Then
-    assertThat(health.getStatus()).isEqualTo(Status.OUT_OF_SERVICE);
-    assertThat(health.getDetails()).containsEntry("status", "PAUSED");
-    assertThat(health.getDetails())
-        .containsEntry("reason", "Processing is administratively paused");
-
-    verify(processingOrchestrationService).getProcessingHealthStatus();
-  }
-
-  @Test
-  void processingHealthIndicator_ShouldIncludeTimestampInDetails() {
-    // Given
-    Map<String, Object> processingStatus = new HashMap<>();
-    processingStatus.put("status", "IDLE");
-    processingStatus.put("activeProcesses", 0);
-    processingStatus.put("queueSize", 0);
-
-    when(processingOrchestrationService.getProcessingHealthStatus()).thenReturn(processingStatus);
-
-    // When
-    Health health = processingHealthIndicator.health();
-
-    // Then
-    assertThat(health.getDetails()).containsKey("lastChecked");
-    assertThat(health.getDetails().get("lastChecked")).isInstanceOf(LocalDateTime.class);
-
-    LocalDateTime lastChecked = (LocalDateTime) health.getDetails().get("lastChecked");
-    assertThat(lastChecked).isAfter(LocalDateTime.now().minusMinutes(1));
-    assertThat(lastChecked).isBefore(LocalDateTime.now().plusMinutes(1));
+      LocalDateTime lastChecked = (LocalDateTime) health.getDetails().get("lastChecked");
+      assertThat(lastChecked).isAfter(LocalDateTime.now().minusMinutes(1));
+      assertThat(lastChecked).isBefore(LocalDateTime.now().plusMinutes(1));
+    }
   }
 }

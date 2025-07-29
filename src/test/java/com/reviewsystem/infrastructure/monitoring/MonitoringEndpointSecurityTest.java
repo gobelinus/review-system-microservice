@@ -9,7 +9,6 @@ import com.reviewsystem.application.service.ProcessingOrchestrationService;
 import com.reviewsystem.infrastructure.aws.S3Service;
 import java.util.HashMap;
 import java.util.Map;
-import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
@@ -22,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureWebMvc
+// @WebMvcTest
 @ActiveProfiles("test-postgres")
 class MonitoringEndpointSecurityTest {
 
@@ -29,7 +29,7 @@ class MonitoringEndpointSecurityTest {
 
   @MockBean private S3Service s3Service;
 
-  @MockBean private DataSource dataSource;
+  // @MockBean private DataSource dataSource;
 
   @MockBean private ProcessingOrchestrationService processingOrchestrationService;
 

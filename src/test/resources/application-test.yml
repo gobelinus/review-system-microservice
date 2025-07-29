@@ -1,14 +1,24 @@
-# Test configuration for PostgreSQL database
+# Test configuration for PostgreSQL database using Testcontainers
 spring:
+  config:
+    activate:
+      on-profile: test-postgres
   datasource:
-    url: jdbc:postgresql://localhost:5432/reviewsystem_test
-    username: test_user
-    password: test_password
-    driver-class-name: org.postgresql.Driver
+    # Use the Testcontainers JDBC URL scheme
+    url: jdbc:tc:postgresql:16-alpine:///reviewsystem_test # Use a specific version, e.g., 16-alpine
+    username: test_user # These can often be omitted, Testcontainers provides defaults
+    password: test_password # but it's good to match what you might define in your container
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver # CRUCIAL: This activates Testcontainers JDBC
+
+  task:
+    scheduling:
+      pool:
+        size: 5
+      thread-name-prefix: review-scheduler-
 
   jpa:
     database: postgresql
-    database-provider: org.hibernate.dialect.PostgreSQLDialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect # Corrected: platform not provider
     hibernate:
       ddl-auto: validate
     show-sql: true
@@ -25,17 +35,17 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     validate-on-migrate: true
-    clean-disabled: false
+    clean-disabled: false # Be careful with clean-disabled=false in tests if you want a fresh DB each time
 
   test:
     database:
-      replace: none
+      replace: none # Important: Keep this to prevent in-memory DB from replacing Testcontainers
 
 # Application specific test configuration
 app:
   file-tracking:
-    cleanup-days: 7  # Shorter retention for tests
-    stuck-processing-hours: 1  # Shorter timeout for tests
+    cleanup-days: 7
+    stuck-processing-hours: 1
 
 # Logging configuration for tests
 logging:

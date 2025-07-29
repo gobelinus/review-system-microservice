@@ -39,15 +39,15 @@ class ReviewEntityTest {
       // Given
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
               .hotelName("Oscar Saigon Hotel")
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(6.4)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -58,18 +58,18 @@ class ReviewEntityTest {
     }
 
     @Test
-    @DisplayName("Should fail validation when providerReviewId is null")
+    @DisplayName("Should fail validation when hotelReviewId is null")
     void shouldFailValidationWhenProviderReviewIdIsNull() {
       // Given
       Review review =
           Review.builder()
               .provider(provider)
               .hotelId(10984)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(6.4)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -82,19 +82,19 @@ class ReviewEntityTest {
     }
 
     @Test
-    @DisplayName("Should fail validation when providerReviewId is blank")
+    @DisplayName("Should fail validation when hotelReviewId is blank")
     void shouldFailValidationWhenProviderReviewIdIsBlank() {
       // Given
       Review review =
           Review.builder()
-              .providerReviewId("   ")
+              .hotelReviewId("   ")
               .provider(provider)
               .hotelId(10984)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(6.4)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -112,13 +112,13 @@ class ReviewEntityTest {
       // Given
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .hotelId(10984)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(6.4)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -135,13 +135,13 @@ class ReviewEntityTest {
       // Given
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(6.4)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -158,14 +158,14 @@ class ReviewEntityTest {
       // Given - Rating above maximum (10.0 scale)
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(11.0)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -183,14 +183,14 @@ class ReviewEntityTest {
       // Given
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(-1.0)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -208,14 +208,14 @@ class ReviewEntityTest {
       // Given
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(6.4)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().plusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -233,14 +233,14 @@ class ReviewEntityTest {
       // Given
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(8.5)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -248,31 +248,6 @@ class ReviewEntityTest {
 
       // Then
       assertThat(violations).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should validate language format correctly")
-    void shouldValidateLanguageFormatCorrectly() {
-      // Given - Invalid language format
-      Review review =
-          Review.builder()
-              .providerReviewId("948353737")
-              .provider(provider)
-              .hotelId(10984)
-              .reviewerName("John Doe")
-              .rating(6.4)
-              .reviewText("Great hotel!")
-              .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("invalid-lang")
-              .build();
-
-      // When
-      Set<ConstraintViolation<Review>> violations = validator.validate(review);
-
-      // Then
-      assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage())
-          .isEqualTo("Language must be in ISO 639-1 format (e.g., 'en', 'en-US')");
     }
   }
 
@@ -286,14 +261,14 @@ class ReviewEntityTest {
       // Given
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(6.4)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -313,14 +288,14 @@ class ReviewEntityTest {
 
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(6.4)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       provider.addReview(review);
@@ -418,9 +393,9 @@ class ReviewEntityTest {
     @DisplayName("Should check if review has text content")
     void shouldCheckIfReviewHasTextContent() {
       // Given
-      Review reviewWithText = Review.builder().reviewText("Great experience!").build();
-      Review reviewWithoutText = Review.builder().reviewText("").build();
-      Review reviewWithNullText = Review.builder().reviewText(null).build();
+      Review reviewWithText = Review.builder().reviewComments("Great experience!").build();
+      Review reviewWithoutText = Review.builder().reviewComments("").build();
+      Review reviewWithNullText = Review.builder().reviewComments(null).build();
 
       // When & Then
       assertThat(reviewWithText.hasTextContent()).isTrue();
@@ -446,9 +421,9 @@ class ReviewEntityTest {
     @DisplayName("Should generate unique business key")
     void shouldGenerateUniqueBusinessKey() {
       // Given
-      Review review1 = Review.builder().providerReviewId("948353737").provider(provider).build();
-      Review review2 = Review.builder().providerReviewId("948353738").provider(provider).build();
-      Review review3 = Review.builder().providerReviewId("948353737").provider(provider).build();
+      Review review1 = Review.builder().hotelReviewId("948353737").provider(provider).build();
+      Review review2 = Review.builder().hotelReviewId("948353738").provider(provider).build();
+      Review review3 = Review.builder().hotelReviewId("948353737").provider(provider).build();
 
       // When
       String key1 = review1.getBusinessKey();
@@ -491,22 +466,6 @@ class ReviewEntityTest {
     }
 
     @Test
-    @DisplayName("Should calculate helpful vote percentage")
-    void shouldCalculateHelpfulVotePercentage() {
-      // Given
-      Review review1 = Review.builder().helpfulVotes(8).totalVotes(10).build();
-      Review review2 = Review.builder().helpfulVotes(0).totalVotes(5).build();
-      Review review3 = Review.builder().helpfulVotes(null).totalVotes(10).build();
-      Review review4 = Review.builder().helpfulVotes(5).totalVotes(0).build();
-
-      // When & Then
-      assertThat(review1.getHelpfulVotePercentage()).isEqualTo(80.0);
-      assertThat(review2.getHelpfulVotePercentage()).isEqualTo(0.0);
-      assertThat(review3.getHelpfulVotePercentage()).isEqualTo(0.0);
-      assertThat(review4.getHelpfulVotePercentage()).isEqualTo(0.0);
-    }
-
-    @Test
     @DisplayName("Should mark review processing status correctly")
     void shouldMarkReviewProcessingStatusCorrectly() {
       // Given
@@ -537,13 +496,13 @@ class ReviewEntityTest {
     void shouldImplementEqualsCorrectly() {
       // Given
       Review review1 =
-          Review.builder().providerReviewId("948353737").provider(provider).hotelId(10984).build();
+          Review.builder().hotelReviewId("948353737").provider(provider).hotelId(10984).build();
 
       Review review2 =
-          Review.builder().providerReviewId("948353737").provider(provider).hotelId(10984).build();
+          Review.builder().hotelReviewId("948353737").provider(provider).hotelId(10984).build();
 
       Review review3 =
-          Review.builder().providerReviewId("948353738").provider(provider).hotelId(10984).build();
+          Review.builder().hotelReviewId("948353738").provider(provider).hotelId(10984).build();
 
       // When & Then
       assertThat(review1).isEqualTo(review2);
@@ -557,10 +516,10 @@ class ReviewEntityTest {
     void shouldImplementHashCodeConsistently() {
       // Given
       Review review1 =
-          Review.builder().providerReviewId("948353737").provider(provider).hotelId(10984).build();
+          Review.builder().hotelReviewId("948353737").provider(provider).hotelId(10984).build();
 
       Review review2 =
-          Review.builder().providerReviewId("948353737").provider(provider).hotelId(10984).build();
+          Review.builder().hotelReviewId("948353737").provider(provider).hotelId(10984).build();
 
       // When & Then
       assertThat(review1.hashCode()).isEqualTo(review2.hashCode());
@@ -574,12 +533,12 @@ class ReviewEntityTest {
       Review review =
           Review.builder()
               .id(1L)
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
               .hotelName("Oscar Saigon Hotel")
               .rating(6.4)
-              .language("en")
+              .translateSource("en")
               .processingStatus(Review.ProcessingStatus.PROCESSED)
               .build();
 
@@ -589,11 +548,11 @@ class ReviewEntityTest {
       // Then
       assertThat(toString).contains("Review");
       assertThat(toString).contains("id=1");
-      assertThat(toString).contains("providerReviewId='948353737'");
+      assertThat(toString).contains("hotelReviewId='948353737'");
       assertThat(toString).contains("hotelId=10984");
       assertThat(toString).contains("hotelName='Oscar Saigon Hotel'");
       assertThat(toString).contains("rating=6.4");
-      assertThat(toString).contains("language='en'");
+      assertThat(toString).contains("translateSource='en'");
       assertThat(toString).contains("processingStatus=PROCESSED");
     }
   }
@@ -609,7 +568,7 @@ class ReviewEntityTest {
       String longHotelName = "a".repeat(301);
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
               .hotelName(longHotelName)
@@ -633,7 +592,7 @@ class ReviewEntityTest {
       String longTitle = "a".repeat(501);
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
               .reviewTitle(longTitle)
@@ -656,7 +615,7 @@ class ReviewEntityTest {
       // Given - Negative length of stay
       Review review =
           Review.builder()
-              .providerReviewId("948353737")
+              .hotelReviewId("948353737")
               .provider(provider)
               .hotelId(10984)
               .lengthOfStay(-1)

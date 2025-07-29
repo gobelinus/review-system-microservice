@@ -54,11 +54,11 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("John Doe")
+            .reviewerDisplayName("John Doe")
             .rating(4.5)
-            .reviewText("Great hotel with excellent service!")
+            .reviewComments("Great hotel with excellent service!")
             .reviewDate(LocalDateTime.now().minusDays(1))
-            .language("en")
+            .translateSource("en")
             .build();
   }
 
@@ -83,11 +83,11 @@ class ReviewRepositoryTest {
 
     // When
     Optional<Review> found =
-        reviewRepository.findByExternalIdAndprovider("AGD123456", testprovider);
+        reviewRepository.findByExternalIdAndProvider("AGD123456", testprovider);
 
     // Then
     assertThat(found).isPresent();
-    assertThat(found.get().getReviewerName()).isEqualTo("John Doe");
+    assertThat(found.get().getReviewerDisplayName()).isEqualTo("John Doe");
   }
 
   @Test
@@ -97,8 +97,8 @@ class ReviewRepositoryTest {
     reviewRepository.save(testReview);
 
     // When
-    boolean exists = reviewRepository.existsByExternalIdAndprovider("AGD123456", testprovider);
-    boolean notExists = reviewRepository.existsByExternalIdAndprovider("NONEXISTENT", testprovider);
+    boolean exists = reviewRepository.existsByExternalIdAndProvider("AGD123456", testprovider);
+    boolean notExists = reviewRepository.existsByExternalIdAndProvider("NONEXISTENT", testprovider);
 
     // Then
     assertThat(exists).isTrue();
@@ -113,9 +113,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("Jane Smith")
+            .reviewerDisplayName("Jane Smith")
             .rating(3.0)
-            .reviewText("Good location, clean rooms")
+            .reviewComments("Good location, clean rooms")
             .reviewDate(LocalDateTime.now().minusDays(2))
             .build();
 
@@ -123,7 +123,7 @@ class ReviewRepositoryTest {
     reviewRepository.save(review2);
 
     // When
-    List<Review> reviews = reviewRepository.findByhotelId("HOTEL001");
+    List<Review> reviews = reviewRepository.findByHotelId("HOTEL001");
 
     // Then
     assertThat(reviews).hasSize(2);
@@ -139,9 +139,9 @@ class ReviewRepositoryTest {
           Review.builder()
               .provider(testprovider)
               .hotelId(1)
-              .reviewerName("Reviewer " + i)
+              .reviewerDisplayName("Reviewer " + i)
               .rating(4.0)
-              .reviewText("Review text " + i)
+              .reviewComments("Review text " + i)
               .reviewDate(LocalDateTime.now().minusDays(i))
               .build();
       reviewRepository.save(review);
@@ -149,7 +149,7 @@ class ReviewRepositoryTest {
 
     // When
     Pageable pageable = PageRequest.of(0, 3, Sort.by("reviewDate").descending());
-    Page<Review> reviewPage = reviewRepository.findByhotelId("HOTEL001", pageable);
+    Page<Review> reviewPage = reviewRepository.findByHotelId("HOTEL001", pageable);
 
     // Then
     assertThat(reviewPage.getContent()).hasSize(3);
@@ -169,9 +169,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(bookingprovider)
             .hotelId(2)
-            .reviewerName("Mike Johnson")
+            .reviewerDisplayName("Mike Johnson")
             .rating(5.0)
-            .reviewText("Excellent experience!")
+            .reviewComments("Excellent experience!")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -179,8 +179,8 @@ class ReviewRepositoryTest {
     reviewRepository.save(bookingReview);
 
     // When
-    List<Review> agodaReviews = reviewRepository.findByprovider(testprovider);
-    List<Review> bookingReviews = reviewRepository.findByprovider(bookingprovider);
+    List<Review> agodaReviews = reviewRepository.findByProvider(testprovider);
+    List<Review> bookingReviews = reviewRepository.findByProvider(bookingprovider);
 
     // Then
     assertThat(agodaReviews).hasSize(1);
@@ -197,9 +197,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("Critic User")
+            .reviewerDisplayName("Critic User")
             .rating(2.0)
-            .reviewText("Not satisfied")
+            .reviewComments("Not satisfied")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -207,9 +207,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("Happy User")
+            .reviewerDisplayName("Happy User")
             .rating(5.0)
-            .reviewText("Amazing!")
+            .reviewComments("Amazing!")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -239,9 +239,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("Recent User")
+            .reviewerDisplayName("Recent User")
             .rating(4.0)
-            .reviewText("Recent review")
+            .reviewComments("Recent review")
             .reviewDate(yesterday)
             .build();
 
@@ -249,9 +249,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("Old User")
+            .reviewerDisplayName("Old User")
             .rating(3.0)
-            .reviewText("Old review")
+            .reviewComments("Old review")
             .reviewDate(weekAgo)
             .build();
 
@@ -267,29 +267,29 @@ class ReviewRepositoryTest {
   }
 
   @Test
-  @DisplayName("Should find reviews by language code")
+  @DisplayName("Should find reviews by translateSource code")
   void shouldFindReviewsByLanguageCode() {
     // Given
     Review englishReview =
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("English User")
+            .reviewerDisplayName("English User")
             .rating(4.0)
-            .reviewText("Great place!")
+            .reviewComments("Great place!")
             .reviewDate(LocalDateTime.now())
-            .language("en")
+            .translateSource("en")
             .build();
 
     Review frenchReview =
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("French User")
+            .reviewerDisplayName("French User")
             .rating(3.5)
-            .reviewText("Très bien!")
+            .reviewComments("Très bien!")
             .reviewDate(LocalDateTime.now())
-            .language("fr")
+            .translateSource("fr")
             .build();
 
     reviewRepository.save(englishReview);
@@ -302,8 +302,8 @@ class ReviewRepositoryTest {
     // Then
     assertThat(englishReviews).hasSize(1);
     assertThat(frenchReviews).hasSize(1);
-    assertThat(englishReviews.get(0).getReviewText()).isEqualTo("Great place!");
-    assertThat(frenchReviews.get(0).getReviewText()).isEqualTo("Très bien!");
+    assertThat(englishReviews.get(0).getReviewComments()).isEqualTo("Great place!");
+    assertThat(frenchReviews.get(0).getReviewComments()).isEqualTo("Très bien!");
   }
 
   @Test
@@ -314,9 +314,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("Verified User")
+            .reviewerDisplayName("Verified User")
             .rating(4.0)
-            .reviewText("Verified review")
+            .reviewComments("Verified review")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -324,9 +324,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("Unverified User")
+            .reviewerDisplayName("Unverified User")
             .rating(3.0)
-            .reviewText("Unverified review")
+            .reviewComments("Unverified review")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -350,9 +350,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("Low Rating User")
+            .reviewerDisplayName("Low Rating User")
             .rating(2.0)
-            .reviewText("Could be better")
+            .reviewComments("Could be better")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -360,7 +360,7 @@ class ReviewRepositoryTest {
     reviewRepository.save(lowRatingReview); // 2.0 rating
 
     // When
-    List<Review> goodReviews = reviewRepository.findByhotelIdAndMinRating("HOTEL001", 3.0);
+    List<Review> goodReviews = reviewRepository.findByHotelIdAndMinRating("HOTEL001", 3.0);
 
     // Then
     assertThat(goodReviews).hasSize(1);
@@ -375,9 +375,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("User 2")
+            .reviewerDisplayName("User 2")
             .rating(4.0)
-            .reviewText("Okay experience")
+            .reviewComments("Okay experience")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -386,7 +386,7 @@ class ReviewRepositoryTest {
     // Average should be 4.25
 
     // When
-    Double averageRating = reviewRepository.findAverageRatingByhotelId("HOTEL001");
+    Double averageRating = reviewRepository.findAverageRatingByHotelId("HOTEL001");
 
     // Then
     assertThat(averageRating).isEqualTo(4.25);
@@ -400,9 +400,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("User 2")
+            .reviewerDisplayName("User 2")
             .rating(3.0)
-            .reviewText("Good stay")
+            .reviewComments("Good stay")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -410,9 +410,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider)
             .hotelId(1)
-            .reviewerName("User 3")
+            .reviewerDisplayName("User 3")
             .rating(4.0)
-            .reviewText("Different hotel")
+            .reviewComments("Different hotel")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -421,8 +421,8 @@ class ReviewRepositoryTest {
     reviewRepository.save(review3);
 
     // When
-    Long hotel1Count = reviewRepository.countReviewsByhotelId("HOTEL001");
-    Long hotel2Count = reviewRepository.countReviewsByhotelId("HOTEL002");
+    Long hotel1Count = reviewRepository.countReviewsByHotelId("HOTEL001");
+    Long hotel2Count = reviewRepository.countReviewsByHotelId("HOTEL002");
 
     // Then
     assertThat(hotel1Count).isEqualTo(2);
@@ -438,9 +438,9 @@ class ReviewRepositoryTest {
           Review.builder()
               .provider(testprovider)
               .hotelId(1)
-              .reviewerName("User " + i)
+              .reviewerDisplayName("User " + i)
               .rating(0.5 + i * 0.5)
-              .reviewText("Review " + i)
+              .reviewComments("Review " + i)
               .reviewDate(LocalDateTime.now().minusDays(i))
               .build();
       reviewRepository.save(review);
@@ -448,7 +448,7 @@ class ReviewRepositoryTest {
 
     // When - Sort by rating descending, page 1 (size 3)
     Pageable pageable = PageRequest.of(1, 3, Sort.by("rating").descending());
-    Page<Review> reviewPage = reviewRepository.findByhotelId("HOTEL001", pageable);
+    Page<Review> reviewPage = reviewRepository.findByHotelId("HOTEL001", pageable);
 
     // Then
     assertThat(reviewPage.getContent()).hasSize(3);
@@ -471,7 +471,7 @@ class ReviewRepositoryTest {
     assertThatThrownBy(
             () -> {
               Review invalidReview = Review.builder().build();
-              invalidReview.setProviderReviewId(""); // Blank external ID
+              invalidReview.setProviderExternalId(""); // Blank external ID
               reviewRepository.saveAndFlush(invalidReview);
             })
         .isInstanceOf(ConstraintViolationException.class);
@@ -482,9 +482,9 @@ class ReviewRepositoryTest {
                   Review.builder()
                       .provider(testprovider)
                       .hotelId(1)
-                      .reviewerName("Valid Name")
+                      .reviewerDisplayName("Valid Name")
                       .rating(15.0) // Rating too high
-                      .reviewText("Valid text")
+                      .reviewComments("Valid text")
                       .reviewDate(LocalDateTime.now())
                       .build();
               reviewRepository.saveAndFlush(invalidReview);
@@ -503,9 +503,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(testprovider) // Same provider
             .hotelId(2)
-            .reviewerName("Another User")
+            .reviewerDisplayName("Another User")
             .rating(3.0)
-            .reviewText("Different review text")
+            .reviewComments("Different review text")
             .reviewDate(LocalDateTime.now())
             .build();
 
@@ -535,9 +535,9 @@ class ReviewRepositoryTest {
         Review.builder()
             .provider(bookingprovider) // Different provider
             .hotelId(2)
-            .reviewerName("Another User")
+            .reviewerDisplayName("Another User")
             .rating(3.0)
-            .reviewText("Different review text")
+            .reviewComments("Different review text")
             .reviewDate(LocalDateTime.now())
             .build();
 

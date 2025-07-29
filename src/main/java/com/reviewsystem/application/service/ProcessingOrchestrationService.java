@@ -8,10 +8,10 @@ import com.reviewsystem.domain.entity.ProcessedFile;
 import com.reviewsystem.domain.entity.ProcessingJob;
 import com.reviewsystem.domain.repository.ProcessedFileRepository;
 import com.reviewsystem.domain.repository.ProcessingJobRepository;
-import com.reviewsystem.domain.repository.ReviewRepository;
 import com.reviewsystem.domain.service.FileTrackingService;
 import com.reviewsystem.infrastructure.aws.S3Service;
 import com.reviewsystem.infrastructure.monitoring.ProcessingMetrics;
+import com.reviewsystem.repository.ReviewRepository;
 import jakarta.annotation.PreDestroy;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -300,15 +300,16 @@ public class ProcessingOrchestrationService {
       LocalDateTime last24Hours = LocalDateTime.now().minus(24, ChronoUnit.HOURS);
 
       // Database queries for recent activity
-      long recentProcessedFiles = processedFileRepository.countByProcessedAtBefore(last24Hours);
+      long recentProcessedFiles =
+          processedFileRepository.countByProcessingCompletedAtBefore(last24Hours);
       long recentFailedFiles =
-          processedFileRepository.countByStatusAndProcessedAtBefore(
+          processedFileRepository.countByStatusAndProcessingCompletedAtBefore(
               ProcessingStatus.FAILED, last24Hours);
       long recentProcessedReviews = reviewRepository.countByCreatedAtBefore(last24Hours);
 
       // Get last processing activity
       Optional<ProcessedFile> lastProcessedFile =
-          processedFileRepository.findTopByOrderByProcessedAtDesc();
+          processedFileRepository.findTopByOrderByProcessingCompletedAtDesc();
 
       // Calculate failure rate
       double currentFailureRate =
@@ -347,7 +348,7 @@ public class ProcessingOrchestrationService {
       if (lastProcessedFile.isPresent()) {
         ProcessedFile lastFile = lastProcessedFile.get();
         lastActivity.put("lastProcessedFile", lastFile.getS3Key());
-        lastActivity.put("lastProcessedAt", lastFile.getProcessingCompletedAt());
+        lastActivity.put("lastProcessingCompletedAt", lastFile.getProcessingCompletedAt());
         lastActivity.put("lastProcessingStatus", lastFile.getProcessingStatus());
 
         long hoursSinceLastProcessing =

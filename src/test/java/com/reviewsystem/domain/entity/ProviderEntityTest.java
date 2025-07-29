@@ -13,11 +13,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
-@DisplayName("platform Entity Tests")
+@DisplayName("Provider Entity Tests")
 class ProviderEntityTest {
 
   private Validator validator;
+
+  @Autowired private TestEntityManager entityManager;
 
   @BeforeEach
   void setUp() {
@@ -26,12 +30,12 @@ class ProviderEntityTest {
   }
 
   @Nested
-  @DisplayName("platform Validation")
-  class platformValidation {
+  @DisplayName("Provider Validation")
+  class ProviderValidation {
 
     @Test
-    @DisplayName("Should create valid platform with all required fields")
-    void shouldCreateValidplatformWithAllRequiredFields() {
+    @DisplayName("Should create valid provider with all required fields")
+    void shouldCreateValidProviderWithAllRequiredFields() {
       // Given
       Provider provider =
           Provider.builder()
@@ -59,7 +63,7 @@ class ProviderEntityTest {
 
       // Then
       assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage()).isEqualTo("platform name is required");
+      assertThat(violations.iterator().next().getMessage()).isEqualTo("provider name is required");
     }
 
     @Test
@@ -74,41 +78,7 @@ class ProviderEntityTest {
 
       // Then
       assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage()).isEqualTo("platform name is required");
-    }
-
-    @Test
-    @DisplayName("Should fail validation when code is null")
-    void shouldFailValidationWhenCodeIsNull() {
-      // Given
-      Provider platform = Provider.builder().name("Agoda").active(true).build();
-
-      // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(platform);
-
-      // Then
-      assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage()).isEqualTo("platform code is required");
-    }
-
-    @Test
-    @DisplayName("Should fail validation when code is too long")
-    void shouldFailValidationWhenCodeIsTooLong() {
-      // Given
-      Provider platform =
-          Provider.builder()
-              .name("Agoda")
-              .code(ProviderType.VERY_LONG_LONG_PROVIDER_TYPE)
-              .active(true)
-              .build();
-
-      // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(platform);
-
-      // Then
-      assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage())
-          .isEqualTo("platform code must be between 2 and 10 characters");
+      assertThat(violations.iterator().next().getMessage()).isEqualTo("provider name is required");
     }
 
     @Test
@@ -134,7 +104,7 @@ class ProviderEntityTest {
   }
 
   @Nested
-  @DisplayName("platform-Specific Configurations")
+  @DisplayName("Provider-Specific Configurations")
   class platformSpecificConfigurations {
 
     @Test
@@ -148,7 +118,6 @@ class ProviderEntityTest {
               .active(true)
               .ratingScale(10.0)
               .supportedLanguages("en,th,zh,ja")
-              .processingPriority(1)
               .build();
 
       // When
@@ -169,7 +138,6 @@ class ProviderEntityTest {
               .active(true)
               .ratingScale(5.0)
               .supportedLanguages("en,fr,de,es,it")
-              .processingPriority(2)
               .build();
 
       // When
@@ -199,27 +167,6 @@ class ProviderEntityTest {
       assertThat(violations.iterator().next().getMessage())
           .isEqualTo("Rating scale must be between 1.0 and 10.0");
     }
-
-    @Test
-    @DisplayName("Should fail validation when processing priority is invalid")
-    void shouldFailValidationWhenProcessingPriorityIsInvalid() {
-      // Given
-      Provider platform =
-          Provider.builder()
-              .name("Agoda")
-              .code(ProviderType.AGODA)
-              .active(true)
-              .processingPriority(0)
-              .build();
-
-      // When
-      Set<ConstraintViolation<Provider>> violations = validator.validate(platform);
-
-      // Then
-      assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage())
-          .isEqualTo("Processing priority must be between 1 and 10");
-    }
   }
 
   @Nested
@@ -236,21 +183,21 @@ class ProviderEntityTest {
       Review review1 =
           Review.builder()
               .hotelId(456)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(4.5)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       Review review2 =
           Review.builder()
               .hotelId(457)
-              .reviewerName("Jane Smith")
+              .reviewerDisplayName("Jane Smith")
               .rating(3.5)
-              .reviewText("Good experience")
+              .reviewComments("Good experience")
               .reviewDate(LocalDateTime.now().minusDays(2))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -274,11 +221,11 @@ class ProviderEntityTest {
       Review review =
           Review.builder()
               .hotelId(456)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(4.5)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       platform.addReview(review);
@@ -301,11 +248,11 @@ class ProviderEntityTest {
       Review review =
           Review.builder()
               .hotelId(456)
-              .reviewerName("John Doe")
+              .reviewerDisplayName("John Doe")
               .rating(4.5)
-              .reviewText("Great hotel!")
+              .reviewComments("Great hotel!")
               .reviewDate(LocalDateTime.now().minusDays(1))
-              .language("en")
+              .translateSource("en")
               .build();
 
       // When
@@ -351,7 +298,7 @@ class ProviderEntityTest {
     }
 
     @Test
-    @DisplayName("Should check if platform supports language")
+    @DisplayName("Should check if platform supports translateSource")
     void shouldCheckIfplatformSupportsLanguage() {
       // Given
       Provider platform =
@@ -429,10 +376,10 @@ class ProviderEntityTest {
       LocalDateTime beforeUpdate = LocalDateTime.now();
 
       // When
-      platform.updateLastProcessedTimestamp();
+      platform.setUpdatedAt(beforeUpdate);
 
       // Then
-      assertThat(platform.getLastProcessedAt()).isAfter(beforeUpdate);
+      assertThat(platform.getUpdatedAt()).isEqualTo(beforeUpdate);
     }
   }
 
@@ -479,7 +426,7 @@ class ProviderEntityTest {
     @DisplayName("Should implement toString with essential information")
     void shouldImplementToStringWithEssentialInformation() {
       // Given
-      Provider platform =
+      Provider provider =
           Provider.builder()
               .id(1L)
               .name("Agoda")
@@ -489,10 +436,10 @@ class ProviderEntityTest {
               .build();
 
       // When
-      String toString = platform.toString();
+      String toString = provider.toString();
 
       // Then
-      assertThat(toString).contains("platform");
+      assertThat(toString).contains("provider");
       assertThat(toString).contains("id=1");
       assertThat(toString).contains("name='Agoda'");
       assertThat(toString).contains("code='AGODA'");

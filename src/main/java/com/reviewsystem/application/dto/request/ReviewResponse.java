@@ -25,7 +25,7 @@ public class ReviewResponse {
   private String reviewerCountry;
   private String roomTypeName;
   private Integer lengthOfStay;
-  private String reviewerName;
+  private String reviewerDisplayName;
   private String reviewNegatives;
   private String reviewPositives;
 }

@@ -45,10 +45,12 @@ public class Provider {
   private String name;
 
   /** Unique provider code (uppercase) */
-  @Column(name = "code", nullable = false, length = 10)
-  @NotBlank(message = "provider code is required")
-  @Size(min = 2, max = 10, message = "provider code must be between 2 and 10 characters")
+  @Column(name = "code", nullable = false, length = 10, unique = true)
   private ProviderType code;
+
+  /** Externally linked id e.g. 322 etc as per json */
+  @Column(name = "external_id", unique = true) // Maps to 'external_id' column, unique
+  private Integer externalId;
 
   /** provider description */
   @Column(name = "description", length = 500)
@@ -76,66 +78,11 @@ public class Provider {
   @Builder.Default
   private Double ratingScale = 5.0;
 
-  /** Comma-separated list of supported language codes */
-  @Column(name = "supported_languages", length = 200)
-  @Size(max = 200, message = "Supported languages must not exceed 200 characters")
+  /** Comma-separated list of supported translateSource codes */
+  @Column(name = "supported_translateSources", length = 200)
+  @Size(max = 200, message = "Supported translateSources must not exceed 200 characters")
   @Builder.Default
   private String supportedLanguages = "en";
-
-  /** Processing priority (1 = highest, 10 = lowest) */
-  @Column(name = "processing_priority")
-  @Min(value = 1, message = "Processing priority must be between 1 and 10")
-  @Max(value = 10, message = "Processing priority must be between 1 and 10")
-  @Builder.Default
-  private Integer processingPriority = 5;
-
-  /** Maximum file size in MB that can be processed */
-  @Column(name = "max_file_size_mb")
-  @Min(value = 1, message = "Maximum file size must be at least 1 MB")
-  @Builder.Default
-  private Integer maxFileSizeMb = 100;
-
-  /** Batch size for processing reviews */
-  @Column(name = "batch_size")
-  @Min(value = 1, message = "Batch size must be at least 1")
-  @Max(value = 10000, message = "Batch size must not exceed 10000")
-  @Builder.Default
-  private Integer batchSize = 1000;
-
-  /** S3 bucket path for this provider's files */
-  @Column(name = "s3_path", length = 200)
-  @Size(max = 200, message = "S3 path must not exceed 200 characters")
-  private String s3Path;
-
-  /** File naming pattern regex */
-  @Column(name = "file_pattern", length = 100)
-  @Size(max = 100, message = "File pattern must not exceed 100 characters")
-  @Builder.Default
-  private String filePattern = ".*\\.jl$";
-
-  /** Timezone for date processing */
-  @Column(name = "timezone", length = 50)
-  @Size(max = 50, message = "Timezone must not exceed 50 characters")
-  @Builder.Default
-  private String timezone = "UTC";
-
-  /** Last successful processing timestamp */
-  @Column(name = "last_processed_at")
-  private LocalDateTime lastProcessedAt;
-
-  /** Last successful file processed */
-  @Column(name = "last_processed_file", length = 255)
-  @Size(max = 255, message = "Last processed file must not exceed 255 characters")
-  private String lastProcessedFile;
-
-  /** Total number of reviews processed */
-  @Column(name = "total_reviews_processed")
-  @Builder.Default
-  private Long totalReviewsProcessed = 0L;
-
-  /** Configuration in JSON format */
-  @Column(name = "configuration", columnDefinition = "TEXT")
-  private String configuration;
 
   /** Timestamp when record was created */
   @CreationTimestamp
@@ -180,16 +127,16 @@ public class Provider {
         .orElse(0.0);
   }
 
-  /** Checks if the provider supports a specific language */
-  public boolean supportsLanguage(String languageCode) {
-    if (supportedLanguages == null || languageCode == null) {
+  /** Checks if the provider supports a specific translateSource */
+  public boolean supportsLanguage(String translateSourceCode) {
+    if (supportedLanguages == null || translateSourceCode == null) {
       return false;
     }
 
-    String[] languages = supportedLanguages.toLowerCase().split(",");
-    return Arrays.stream(languages)
+    String[] translateSources = supportedLanguages.toLowerCase().split(",");
+    return Arrays.stream(translateSources)
         .map(String::trim)
-        .anyMatch(lang -> lang.equals(languageCode.toLowerCase()));
+        .anyMatch(lang -> lang.equals(translateSourceCode.toLowerCase()));
   }
 
   /** Normalizes a rating from provider's scale to standard 5-point scale */
@@ -210,18 +157,6 @@ public class Provider {
   /** Deactivates the provider */
   public void deactivate() {
     this.active = false;
-  }
-
-  /** Updates the last processed timestamp to now */
-  public void updateLastProcessedTimestamp() {
-    this.lastProcessedAt = LocalDateTime.now();
-  }
-
-  /** Updates processing statistics */
-  public void updateProcessingStats(String fileName, int reviewsProcessed) {
-    this.lastProcessedFile = fileName;
-    this.lastProcessedAt = LocalDateTime.now();
-    this.totalReviewsProcessed += reviewsProcessed;
   }
 
   // Relationship Management
@@ -275,7 +210,7 @@ public class Provider {
   @Override
   public String toString() {
     return String.format(
-        "provider{id=%d, name='%s', code='%s', active=%s, ratingScale=%.1f, reviewCount=%d}",
-        id, name, code, active, ratingScale, getTotalReviewCount());
+        "provider{id=%d, name='%s', code='%s', active=%s, externalId=%d, reviewCount=%d}",
+        id, name, code, active, externalId, getTotalReviewCount());
   }
 }
