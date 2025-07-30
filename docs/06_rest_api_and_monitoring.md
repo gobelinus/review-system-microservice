@@ -6,6 +6,7 @@ This document provides a comprehensive guide for the implemented REST API and Mo
 
 Part 6 implements the REST API endpoints for review management and comprehensive monitoring capabilities with health checks, metrics collection, and proper security controls.
 
+
 ## 🏗️ Architecture Components
 
 ### 1. REST Controllers
@@ -30,9 +31,9 @@ Part 6 implements the REST API endpoints for review management and comprehensive
 | GET | `/hotel/{hotelId}` | Get reviews for specific hotel | Public |
 | GET | `/statistics` | Get review statistics | Public |
 | GET | `/search` | Search reviews by keywords | Public |
-| GET | `/platforms/{platform}/statistics` | Get platform-specific statistics | Public |
 
-#### Admin Endpoints (`/api/v1/admin`)
+
+#### 🚧 WIP - Admin Endpoints  (`/api/v1/admin`)
 
 | Method | Endpoint | Description | Authentication |
 |--------|----------|-------------|----------------|

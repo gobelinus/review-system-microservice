@@ -1,5 +1,6 @@
 package com.reviewsystem.domain.entity;
 
+import com.reviewsystem.common.converter.ProviderTypeConverter;
 import com.reviewsystem.common.enums.ProviderType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -46,7 +47,7 @@ public class Provider {
 
   /** Unique provider code (uppercase) */
   @Column(name = "code", nullable = false, length = 10, unique = true)
-  @Enumerated(EnumType.STRING)
+  @Convert(converter = ProviderTypeConverter.class)
   private ProviderType code;
 
   /** Externally linked id e.g. 322 etc as per json */

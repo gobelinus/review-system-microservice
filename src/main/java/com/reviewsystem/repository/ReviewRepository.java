@@ -1,5 +1,6 @@
 package com.reviewsystem.repository;
 
+import com.reviewsystem.common.enums.ProviderType;
 import com.reviewsystem.domain.entity.Provider;
 import com.reviewsystem.domain.entity.Review;
 import java.time.LocalDateTime;
@@ -8,10 +9,12 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface ReviewRepository extends JpaRepository<Review, Long> {
+public interface ReviewRepository
+    extends JpaRepository<Review, Long>, JpaSpecificationExecutor<Review> {
 
   // Basic finder methods
   Optional<Review> findByProviderExternalIdAndProvider(
@@ -112,6 +115,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
   /** Count reviews before cutoff */
   Long countByCreatedAtBefore(LocalDateTime dateTime);
 
+  /** Count by review date between start and end */
+  long countByReviewDateBetween(LocalDateTime start, LocalDateTime end);
+
   /** Count reviews by hotel */
   Long countByHotelId(Integer hotelId);
 
@@ -127,4 +133,13 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
   @Query("SELECT r FROM Review r WHERE r.hotelId = :hotelId AND r.contentHash = :contentHash")
   List<Review> findPotentialDuplicates(
       @Param("hotelId") Integer hotelId, @Param("contentHash") String contentHash);
+
+  @Query("SELECT AVG(r.rating) FROM Review r")
+  Double findAverageRating();
+
+  @Query("SELECT COUNT(r) FROM Review r WHERE r.provider.code = :provider")
+  Long countByProviderCode(@Param("provider") ProviderType provider);
+
+  @Query("SELECT AVG(r.rating) FROM Review r WHERE r.provider.code = :provider")
+  Double findAverageRatingByProvider(@Param("provider") ProviderType provider);
 }

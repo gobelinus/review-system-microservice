@@ -38,6 +38,7 @@ public class ReviewDataTransformer {
               .hotelId(rawData.getHotelId())
               .hotelName(sanitizeHotelName(rawData.getHotelName()))
               .provider(provider)
+              .platform(provider.getCode().toString())
               .hotelReviewId(extracthotelReviewId(rawData))
               .rating(extractRating(rawData))
               .reviewComments(extractcomment(rawData))

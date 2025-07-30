@@ -5,6 +5,7 @@ import com.reviewsystem.application.dto.response.ApiResponse;
 import com.reviewsystem.application.dto.response.ReviewResponse;
 import com.reviewsystem.application.service.ReviewQueryService;
 import com.reviewsystem.common.enums.ProviderType;
+import com.reviewsystem.repository.ReviewRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReviewController {
 
   private final ReviewQueryService reviewQueryService;
+  private final ReviewRepository reviewRepository;
 
   @GetMapping
   @Operation(summary = "Get all reviews with optional filtering and pagination")

@@ -22,7 +22,8 @@ public interface ProviderRepository extends JpaRepository<Provider, Long> {
   List<Provider> findByNameContainingIgnoreCase(@Param("name") String name);
 
   /** Find provider by name (case-sensitive) */
-  Optional<Provider> findByName(String name);
+  @Query("SELECT p FROM Provider p WHERE p.name = :name")
+  Optional<Provider> findByName(@Param("name") String name);
 
   /** Check if provider exists by name */
   boolean existsByName(String name);

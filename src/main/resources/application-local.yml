@@ -6,6 +6,11 @@ spring:
     username: reviewuser
     password: reviewpass
     driver-class-name: org.postgresql.Driver
+    mvc:
+      throw-exception-if-no-handler-found: true
+    web:
+      resources:
+        add-mappings: false
 
   jpa:
     database: postgresql
