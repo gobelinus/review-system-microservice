@@ -29,9 +29,8 @@ public class ScheduledReviewProcessor {
    * Scheduled method to process new review files. Runs every 30 minutes and uses distributed
    * locking to prevent concurrent execution.
    */
-  @Scheduled(
-      fixedDelayString =
-          "${app.scheduling.review-processing.interval:1800000}") // 30 minutes default
+  // ToDo: 10 seconds, on production should be increased
+  @Scheduled(fixedDelayString = "${app.scheduling.review-processing.interval:10000}")
   public void processReviews() {
     Lock lock = lockRegistry.obtain(PROCESSING_LOCK_KEY);
     boolean lockAcquired = false;

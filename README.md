@@ -1,12 +1,42 @@
 # Review System Microservice
 
-A Spring Boot microservice for processing hotel reviews from S3 bucket.
+A robust, scalable microservice for processing hotel review data from third-party providers (Agoda, Booking.com, Expedia). The system automatically retrieves JSONL files from AWS S3, processes and validates the data, and stores it in a PostgreSQL database.
 
-## Requirements
-- **Java:** 17.0.15
-- **Maven:** 3.6+
+## 🏗️ Architecture
 
-## Pre-commit Hooks (Automated Quality Gates)
+The application follows Clean Architecture principles with clear separation of concerns:
+
+- **Presentation Layer**: REST controllers, exception handling
+- **Application Layer**: Use cases, DTOs, orchestration services
+- **Domain Layer**: Business entities, domain services, repository interfaces
+- **Infrastructure Layer**: AWS S3 integration, data parsing, scheduling
+
+For detailed architecture refer to [Project Architecture](./docs/00_project_architecture.md) doc.
+
+## 🚀 Features
+
+- ✅ **Automated Processing**: Scheduled retrieval and processing of review files
+- ✅ **Idempotent Operations**: Prevents duplicate processing of files
+- ✅ **Robust Error Handling**: Comprehensive error handling with retry mechanisms
+- ✅ **RESTful API**: Query reviews with filtering, pagination, and sorting
+- ✅ **Monitoring & Health Checks**: Built-in health indicators and metrics
+- ✅ **Docker Support**: Containerized deployment with docker-compose
+- ✅ **Multiple Deployment Options**: Web service, scheduled jobs, or command-line tool
+- ✅ **Database Migration**: Flyway plugin for database migrations
+- ✅ **Pre-commit hooks**: For code quality and reliability.
+
+
+## 📋 Prerequisites
+
+- **Java 17** or higher
+- **Maven 3.8+**
+- **Docker & Docker Compose**
+- **AWS CLI** (for production deployment)
+
+## 🛠️ Quick Start
+### 0. Pre-commit Hooks (Automated Quality Gates)
+
+**One time Setup**
 
 This project uses Maven to manage and install Git pre-commit hooks for code quality and reliability. No extra tools or manual copying required—just Maven!
 
@@ -14,279 +44,232 @@ This project uses Maven to manage and install Git pre-commit hooks for code qual
 - The `hooks/pre-commit` script is versioned in the repo.
 - On `mvn install`, the script is automatically installed to `.git/hooks/pre-commit` and made executable.
 - On every commit, the following checks run:
-  - Code formatting (Spotless)
-  - Linting (Checkstyle)
-  - Static analysis (PMD)
-  - Unit tests
-  - Code coverage report (JaCoCo)
+    - Code formatting (Spotless)
+    - Linting (Checkstyle)
+    - Static analysis (PMD)
+    - Unit tests
+    - Code coverage report (JaCoCo)
 - If any check fails, the commit is blocked with a helpful message.
 
-### Team Setup Instructions
-
-1. **Clone the repository:**
-   ```sh
-   git clone <repo-url>
-   cd <repo-directory>
-   ```
-2. **Install the Git hooks:**
-   ```sh
-   mvn install
-   ```
-   This will set up the pre-commit hook for you.
-3. **Update hooks after changes:**
-   If the `hooks/pre-commit` script changes, run `mvn install` again to update your local hook.
-4. **Troubleshooting:**
-   If you get a permissions error, run:
-   ```sh
-   chmod +x .git/hooks/pre-commit
-   ```
-
-## Project Structure
-- `src/main/java/` - Application source code
-- `src/test/java/` - Test code
-- `hooks/pre-commit` - Versioned pre-commit hook script
-
-## Project Details
-
-# Epic 5: Scheduling & Orchestration
-
-This epic implements the scheduled processing and orchestration layer for the Review System Microservice.
-
-## Overview
-
-The scheduling and orchestration system provides:
-- **Scheduled Processing**: Automatic periodic processing of new review files
-- **Distributed Locking**: Prevents concurrent execution across multiple instances
-- **File Orchestration**: Manages file discovery, prioritization, and processing
-- **Resource Management**: Thread pool management and graceful shutdown
-- **Concurrent Processing**: Optional parallel processing of multiple files
-
-## Components
-
-### 1. ScheduledReviewProcessor
-- **Location**: `src/main/java/com/reviewsystem/infrastructure/scheduler/ScheduledReviewProcessor.java`
-- **Purpose**: Handles scheduled tasks with distributed locking
-- **Features**:
-    - Periodic review file processing (configurable interval)
-    - Daily cleanup of old processed file records
-    - Distributed locking to prevent concurrent execution
-    - Comprehensive error handling and metrics recording
-
-### 2. ProcessingOrchestrationService
-- **Location**: `src/main/java/com/reviewsystem/application/service/ProcessingOrchestrationService.java`
-- **Purpose**: Orchestrates the end-to-end file processing workflow
-- **Features**:
-    - File discovery from S3
-    - File prioritization (chronological processing)
-    - Sequential and concurrent processing modes
-    - Resource management with thread pools
-    - Graceful shutdown handling
-
-### 3. SchedulingConfig
-- **Location**: `src/main/java/com/reviewsystem/config/SchedulingConfig.java`
-- **Purpose**: Configuration for scheduling and locking infrastructure
-- **Features**:
-    - Task scheduler configuration
-    - Lock registry setup for distributed locking
-    - Thread pool configuration
-
-### 4. ProcessingMetrics (Stub)
-- **Location**: `src/main/java/com/reviewsystem/infrastructure/monitoring/ProcessingMetrics.java`
-- **Purpose**: Metrics collection for monitoring and observability
-- **Features**:
-    - Processing success/failure metrics
-    - Performance timing metrics
-    - Error tracking and reporting
-
-## Configuration
-
-### Scheduling Properties
-```yaml
-app:
-  scheduling:
-    review-processing:
-      interval: 1800000  # 30 minutes (in milliseconds)
-    cleanup:
-      cron: "0 0 2 * * ?"  # Daily at 2 AM
-    thread-pool:
-      size: 5
-      prefix: "review-scheduler-"
-    lock:
-      ttl: 3600000  # 1 hour (in milliseconds)
+### 1. Clone the Repository
+```bash
+git clone <repo-url>
+cd review-system-microservice
 ```
 
-### Processing Properties
-```yaml
-app:
-  processing:
-    thread-pool:
-      core-size: 5
-      max-size: 10
-      queue-capacity: 100
-    concurrent:
-      enabled: true
-    cleanup:
-      retention-days: 30
+### 2. Environment Setup
+```bash
+# Copy environment template
+cp .env.local .env
+
+# Edit configuration (see Configuration section)
+vi .env
 ```
 
-## Key Features
+### 3. Start with Docker Compose (Recommended)
+**One time setup**
+```bash
+# Make the setup script executable and run it
+chmod +x docker/setup.sh && ./docker/setup.sh
+```
 
-### Distributed Locking
-- Prevents multiple instances from processing the same files simultaneously
-- Uses Spring Integration's LockRegistry
-- Configurable lock TTL to prevent deadlocks
-- Separate locks for processing and cleanup operations
+#### To Run all services
+```
+# Start all services (app, database, LocalStack S3)
+docker-compose up --build -d
 
-### File Prioritization
-- Files are processed in chronological order
-- Extracts date information from file paths: `reviews/YYYY/MM/DD/provider-reviews-YYYYMMDD.jl`
-- Ensures consistent processing order across multiple runs
+# View logs
+docker-compose logs -f review-system-app
 
-### Concurrent Processing
-- Optional concurrent processing for improved performance
-- Configurable thread pool with proper resource management
-- Individual file failures don't stop processing of other files
-- Comprehensive error handling and reporting
+# Stop services
+docker-compose down
+```
 
-### Graceful Shutdown
-- Proper cleanup of thread pools and resources
-- Waits for current processing to complete before shutdown
-- Configurable shutdown timeout
+### 4. Manual Setup (Development)
+```bash
+# Start PostgreSQL and LocalStack
+docker-compose up -d postgres localstack
 
-## Testing
+# Run application
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 
-### Unit Tests
-- **ScheduledReviewProcessorTest**: Tests scheduling logic, locking, and error handling
-- **ProcessingOrchestrationServiceTest**: Tests orchestration logic, prioritization, and concurrent processing
-- **SchedulingConfigTest**: Tests configuration and lock registry setup
+# Or build and run JAR
+./mvnw clean package
+java -jar target/review-system-microservice-1.0.0.jar
+```
 
-### Integration Tests
-- **SchedulingIntegrationTest**: Tests distributed locking and concurrent execution prevention
-- Verifies end-to-end scheduling behavior
-- Tests health check functionality
+
+After starting, wait for 10seconds to job to process for first time. Then hit the api to see data
+http://127.0.0.1:8080/api/v1/reviews
+
+## 🔧 Configuration
+
+### Default Users
+```
+User:
+	name: user
+	password: password
+	role: USER
+Admin:
+	name: admin
+	password: adminpass
+	role: ADMIN
+```
+
+### Environment Variables
+Verify all details in  `src/main/resources/application-local.yml`  are correct.
+
+### Application Profiles
+
+#### Development Profile (`application-local.yml`)
+- Uses LocalStack for S3 simulation
+- H2 in-memory database option
+- Detailed logging enabled
+- Hot reload enabled
+
+#### ToDo: Production Profile (`application-prod.yml`)
+- Real AWS S3 integration
+- Connection pooling optimizations
+- Security hardening
+- Structured logging
+
+
+## 🏃‍♂️ Running the Application
+
+### Option 1: Web Service (Default)
+```bash
+# Start as web service with REST API
+docker-compose up -d
+```
+
+### Option 2: Scheduled Processing Only
+```bash
+# Run as scheduled job (no web interface)
+docker run -e SPRING_PROFILES_ACTIVE=scheduler-only review-system-microservice:latest
+```
+
+## 🧪 Work in Progress: Testing
+
+Coverage as of now
+
+<img src="./docs/images/coverage.png" />
 
 ### Running Tests
+
 ```bash
-# Run all scheduling tests
-mvn test -Dtest="**/scheduler/**" -Dspring.profiles.active=test-postgres
+# Run all tests
+./mvnw test
 
-# Run specific test class
-mvn test -Dtest=ScheduledReviewProcessorTest -Dspring.profiles.active=test-postgres
+# Run specific test categories
+./mvnw test -Dtest="**/*UnitTest"
+./mvnw test -Dtest="**/*IntegrationTest"
 
-# Run integration tests
-mvn test -Dtest=SchedulingIntegrationTest -Dspring.profiles.active=test-postgres
+# Run tests with coverage
+./mvnw test jacoco:report
+open target/site/jacoco/index.html
 ```
 
-## Usage
+### Run tests as pre-hook
 
-### Automatic Processing
-The system automatically processes new files based on the configured schedule:
-```java
-@Scheduled(fixedDelayString = "${app.scheduling.review-processing.interval:1800000}")
-public void processReviews() {
-    // Automatic processing every 30 minutes (default)
-}
+Uncomment below section in `hooks/pre-commit`
+```
+# # Run tests on affected modules
+# echo "Running tests..."
+# if ! mvn test -q; then
+#   echo "❌ Tests failed. Please fix before committing."
+#   exit 1
+# fi
+
+# # Update test case reports
+# echo "Running tests..."
+# if ! mvn jacoco:report -q; then
+#   echo "❌ JaCoCo coverage report generation failed."
+#   exit 1
+# fi
 ```
 
-### Manual Processing
-Processing can be triggered manually via the orchestration service:
-```java
-@Autowired
-private ProcessingOrchestrationService orchestrationService;
-
-public void triggerManualProcessing() {
-    Long reviewsProcessed = orchestrationService.triggerManualProcessing();
-}
-```
-
-### Health Monitoring
-```java
-@Autowired
-private ScheduledReviewProcessor scheduler;
-
-public boolean checkSchedulerHealth() {
-    return scheduler.isSchedulerHealthy();
-}
-```
-
-## Error Handling
-
-### Processing Errors
-- Individual file processing errors don't stop the entire batch
-- Errors are logged and reported to metrics system
-- Failed files can be retried in subsequent runs
-
-### Lock Acquisition Failures
-- When lock cannot be acquired, processing is skipped (not failed)
-- Metrics are recorded for monitoring concurrent execution attempts
-- Next scheduled run will attempt processing again
-
-### Shutdown Handling
-- Graceful shutdown with configurable timeout
-- Current processing completes before shutdown
-- Thread pools are properly cleaned up
-
-## Monitoring
-
-### Key Metrics
-- Processing success/failure rates
-- Number of files processed per run
-- Processing duration and performance
-- Lock acquisition success/failure
-- Thread pool utilization
+## 📈 Monitoring & Logging
 
 ### Health Checks
-- Scheduler health status
-- Lock registry connectivity
-- Thread pool status
-- Processing statistics
 
-## Production Considerations
+The application provides comprehensive health checks:
 
-### Distributed Lock Registry
-For production deployment, replace the default lock registry with a distributed solution:
-```java
-@Bean
-public LockRegistry lockRegistry() {
-    // Use Redis-based lock registry for production
-    return new RedisLockRegistry(redisConnectionFactory, "review-processing");
-}
-```
+- **Database Connectivity**: PostgreSQL connection status
+- **S3 Connectivity**: AWS S3 bucket accessibility
+- **Processing Status**: Current processing queue status
+- **Disk Space**: Available disk space for file processing
 
-### Monitoring Integration
-Integrate with monitoring systems (Prometheus, Micrometer, etc.):
-```java
-@Component
-public class ProcessingMetrics {
-    private final MeterRegistry meterRegistry;
-    
-    public void recordProcessingSuccess(Long count) {
-        meterRegistry.counter("review.processing.success")
-            .increment(count);
+### Custom Metrics
+
+- `reviews.processed.count`: Total reviews processed
+- `files.processing.time`: Average file processing time
+- `errors.validation.count`: Number of validation errors
+- `reviews.by.provider`: Reviews count by provider
+
+
+## 🚨 Error Handling
+
+### Common Error Scenarios
+
+1. **AWS S3 Errors**
+    - Connection timeouts → Automatic retry with exponential backoff
+    - Access denied → Log error and skip file
+    - File not found → Mark as processed to avoid reprocessing
+
+2. **Data Validation Errors**
+    - Malformed JSON → Log error and continue with next record
+    - Missing required fields → Skip record and log validation error
+    - Invalid date formats → Apply default date transformation
+
+3. **Database Errors**
+    - Connection failures → Retry with circuit breaker
+    - Constraint violations → Log detailed error and skip record
+    - Transaction rollbacks → Rollback batch and retry smaller batches
+
+### Error Response Format
+
+```json
+{
+  "timestamp": "2025-07-29T10:30:00Z",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Invalid request parameters",
+  "path": "/api/v1/reviews",
+  "correlationId": "abc-123-def-456",
+  "details": [
+    {
+      "field": "ratingMin",
+      "message": "Rating must be between 0 and 10"
     }
+  ]
 }
 ```
 
-### Scaling Considerations
-- Configure appropriate thread pool sizes based on available resources
-- Monitor memory usage during concurrent processing
-- Consider implementing backpressure mechanisms for high-volume scenarios
+## 🔐 Security
 
-## Dependencies
+### API Security
+- **Authentication**: JWT tokens for admin endpoints
+- **Rate Limiting**: Prevent API abuse (100 requests/minute per IP)
+- **Input Validation**: Comprehensive request validation
+- **CORS Configuration**: Configurable cross-origin requests
 
-### Required Services (Stubs)
-- `S3Service`: File discovery and download from S3
-- `ReviewProcessingService`: Core file processing logic
-- `FileTrackingService`: File processing state management
+### AWS Security
+- **IAM Roles**: Least privilege access to S3 buckets
+- **Encryption**: S3 server-side encryption enabled
+- **VPC Configuration**: Network isolation in production
 
-### Spring Dependencies
-- `spring-boot-starter-integration`: For lock registry
-- `spring-boot-starter-scheduling`: For @Scheduled support
-- `spring-boot-starter-actuator`: For health checks and metrics
+### Database Security
+- **Connection Encryption**: SSL/TLS for all database connections
+- **Secrets Management**: External secret management support
+- **SQL Injection Prevention**: Parameterized queries via JPA
 
-## Next Steps
 
-1. **Epic 6**: Implement REST API endpoints for manual triggering and monitoring
-2. **Epic 7**: Add comprehensive error handling and resilience patterns
-3. **Epic 8**: Implement performance optimizations and advanced concurrent processing
-4. **Production Setup**: Configure distributed locking and monitoring integrations
+
+## ToDo
+- [ ] Complete prometheus setup for advanced monitoring
+- [ ] Improve Test Coverage and fix failing tests
+- [ ] use `.env` file for docker and application properties or yml files
+- [ ] Performance & Scalability
+- [ ] Improve Error handling
+- [ ] Cachemanager is currently disabled, 
+- [ ] `ToDo` marked in code, should be worked on
