@@ -41,7 +41,7 @@ class ProviderRepositoryTest {
 
   @Test
   @DisplayName("Should save and find provider by code")
-  void shouldSaveAndFindproviderByCode() {
+  void shouldSaveAndFindProviderByCode() {
     // When
     Provider savedprovider = providerRepository.save(testprovider);
     Optional<Provider> foundprovider = providerRepository.findByCode("AGODA");

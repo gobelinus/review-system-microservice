@@ -262,7 +262,7 @@ class ReviewProcessingServiceTest {
     when(providerRepository.findByName("Agoda")).thenReturn(Optional.of(mockprovider));
     when(transformer.transform(any(RawReviewData.class), eq(mockprovider)))
         .thenReturn(transformedReviews.get(0), transformedReviews.get(1));
-    when(reviewRepository.existsByProviderReviewId(anyString()))
+    when(reviewRepository.existsByProviderReviews(any()))
         .thenReturn(true, false); // First review exists, second doesn't
     when(reviewRepository.saveAll(anyList())).thenReturn(List.of(transformedReviews.get(1)));
 

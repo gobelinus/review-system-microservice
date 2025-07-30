@@ -7,10 +7,10 @@ import com.reviewsystem.common.enums.ProviderType;
 import com.reviewsystem.domain.entity.ProcessedFile;
 import com.reviewsystem.domain.entity.ProcessingJob;
 import com.reviewsystem.domain.repository.ProcessedFileRepository;
-import com.reviewsystem.domain.repository.ProcessingJobRepository;
 import com.reviewsystem.domain.service.FileTrackingService;
 import com.reviewsystem.infrastructure.aws.S3Service;
 import com.reviewsystem.infrastructure.monitoring.ProcessingMetrics;
+import com.reviewsystem.repository.ProcessingJobRepository;
 import com.reviewsystem.repository.ReviewRepository;
 import jakarta.annotation.PreDestroy;
 import java.time.LocalDate;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.CacheManager;
+// import org.springframework.cache.CacheManager;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,7 +48,9 @@ public class ProcessingOrchestrationService {
   private final ProcessedFileRepository processedFileRepository;
   private final ReviewRepository reviewRepository;
   private final ProcessingJobRepository processingJobRepository;
-  private final CacheManager cacheManager;
+
+  // ToDo: Enable CahceManager and test
+  // private final CacheManager cacheManager;
 
   @Value("${app.processing.cleanup-retention-days:30}")
   private int cleanupRetentionDays;
@@ -111,7 +113,8 @@ public class ProcessingOrchestrationService {
 
         try {
           log.debug("Processing file: {}", fileKey);
-          Long recordsProcessed = reviewProcessingService.processFile(fileKey);
+
+          Long recordsProcessed = reviewProcessingService.processNewFile(s3Object);
           totalProcessed += recordsProcessed;
           log.info("Successfully processed file: {} - {} records", fileKey, recordsProcessed);
 
@@ -303,7 +306,7 @@ public class ProcessingOrchestrationService {
       long recentProcessedFiles =
           processedFileRepository.countByProcessingCompletedAtBefore(last24Hours);
       long recentFailedFiles =
-          processedFileRepository.countByStatusAndProcessingCompletedAtBefore(
+          processedFileRepository.countByProcessingStatusAndProcessingCompletedAtBefore(
               ProcessingStatus.FAILED, last24Hours);
       long recentProcessedReviews = reviewRepository.countByCreatedAtBefore(last24Hours);
 
@@ -646,13 +649,6 @@ public class ProcessingOrchestrationService {
         String fileName = newFile.key();
         try {
           log.debug("Processing file: {} for job: {}", fileName, jobId);
-
-          // Check if file was already processed (idempotent check)
-          if (fileTrackingService.isFileAlreadyProcessed(fileName)) {
-            log.debug("File {} already processed, skipping", fileName);
-            continue;
-          }
-
           // Process the file
           int reviewsProcessed = reviewProcessingService.processFile(fileName).intValue();
           totalReviews += reviewsProcessed;
@@ -1223,6 +1219,7 @@ public class ProcessingOrchestrationService {
     return logs;
   }
 
+  /* ToDo: Enable Caching for Processing
   public void clearCaches(String cacheName) {
     log.info("Clearing cache: {}", cacheName);
 
@@ -1253,7 +1250,7 @@ public class ProcessingOrchestrationService {
       log.warn("Cache manager not available");
     }
   }
-
+   */
   public Map<ProviderType, Map<String, Object>> getProviderStatuses() {
     Map<ProviderType, Map<String, Object>> providerStatuses = new HashMap<>();
 

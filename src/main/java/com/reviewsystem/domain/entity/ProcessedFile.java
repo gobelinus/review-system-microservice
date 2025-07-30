@@ -77,9 +77,9 @@ public class ProcessedFile {
   @Column(name = "error_message", length = 2000)
   private String errorMessage;
 
-  @NotNull(message = "provider cannot be null")
+  // ToDo: Convert this to use enum
   @Size(max = 50, message = "provider cannot exceed 50 characters")
-  @Column(name = "provider", nullable = false, length = 50)
+  @Column(name = "provider", nullable = true, length = 50)
   private String provider;
 
   @CreatedDate

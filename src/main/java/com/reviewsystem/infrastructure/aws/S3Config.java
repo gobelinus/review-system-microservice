@@ -84,7 +84,7 @@ public class S3Config {
 
   /** Check if this is a LocalStack configuration (for testing) */
   public boolean isLocalStack() {
-    return endpoint != null && endpoint.contains("localstack");
+    return endpoint != null && (endpoint.contains("localstack") || endpoint.contains("localhost"));
   }
 
   /** Get the full prefix with trailing slash if needed */

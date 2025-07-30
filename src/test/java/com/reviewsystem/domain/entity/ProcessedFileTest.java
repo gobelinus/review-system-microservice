@@ -165,14 +165,14 @@ class ProcessedFileTest {
     }
 
     @Test
-    @DisplayName("Should fail validation when provider is null")
-    void shouldFailValidationWhenproviderIsNull() {
+    @DisplayName("Should not fail validation when provider is null")
+    void shouldNotFailValidationWhenproviderIsNull() {
       ProcessedFile file = validProcessedFile.toBuilder().provider(null).build();
 
       Set<ConstraintViolation<ProcessedFile>> violations = validator.validate(file);
 
-      assertThat(violations).hasSize(1);
-      assertThat(violations.iterator().next().getMessage()).isEqualTo("provider cannot be null");
+      assertThat(violations).hasSize(0);
+      // assertThat(violations.iterator().next().getMessage()).isEqualTo("provider cannot be null");
     }
 
     @Test

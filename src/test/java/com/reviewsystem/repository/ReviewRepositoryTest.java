@@ -83,7 +83,7 @@ class ReviewRepositoryTest {
 
     // When
     Optional<Review> found =
-        reviewRepository.findByExternalIdAndProvider("AGD123456", testprovider);
+        reviewRepository.findByProviderExternalIdAndProvider("AGD123456", testprovider);
 
     // Then
     assertThat(found).isPresent();
@@ -97,8 +97,10 @@ class ReviewRepositoryTest {
     reviewRepository.save(testReview);
 
     // When
-    boolean exists = reviewRepository.existsByExternalIdAndProvider("AGD123456", testprovider);
-    boolean notExists = reviewRepository.existsByExternalIdAndProvider("NONEXISTENT", testprovider);
+    boolean exists =
+        reviewRepository.existsByProviderExternalIdAndProvider("AGD123456", testprovider);
+    boolean notExists =
+        reviewRepository.existsByProviderExternalIdAndProvider("NONEXISTENT", testprovider);
 
     // Then
     assertThat(exists).isTrue();
@@ -123,7 +125,7 @@ class ReviewRepositoryTest {
     reviewRepository.save(review2);
 
     // When
-    List<Review> reviews = reviewRepository.findByHotelId("HOTEL001");
+    List<Review> reviews = reviewRepository.findByHotelId(1);
 
     // Then
     assertThat(reviews).hasSize(2);
@@ -149,7 +151,7 @@ class ReviewRepositoryTest {
 
     // When
     Pageable pageable = PageRequest.of(0, 3, Sort.by("reviewDate").descending());
-    Page<Review> reviewPage = reviewRepository.findByHotelId("HOTEL001", pageable);
+    Page<Review> reviewPage = reviewRepository.findByHotelId(1, pageable);
 
     // Then
     assertThat(reviewPage.getContent()).hasSize(3);
@@ -296,8 +298,8 @@ class ReviewRepositoryTest {
     reviewRepository.save(frenchReview);
 
     // When
-    List<Review> englishReviews = reviewRepository.findByLanguage("en");
-    List<Review> frenchReviews = reviewRepository.findByLanguage("fr");
+    List<Review> englishReviews = reviewRepository.findByTranslateSource("en");
+    List<Review> frenchReviews = reviewRepository.findByTranslateSource("fr");
 
     // Then
     assertThat(englishReviews).hasSize(1);
@@ -334,8 +336,8 @@ class ReviewRepositoryTest {
     reviewRepository.save(unverifiedReview);
 
     // When
-    List<Review> verifiedReviews = reviewRepository.findByVerified(true);
-    List<Review> unverifiedReviews = reviewRepository.findByVerified(false);
+    List<Review> verifiedReviews = reviewRepository.findByReviewerDisplayName("Verified User");
+    List<Review> unverifiedReviews = reviewRepository.findByReviewerDisplayName("Unverified User");
 
     // Then
     assertThat(verifiedReviews).hasSize(1);
@@ -448,7 +450,7 @@ class ReviewRepositoryTest {
 
     // When - Sort by rating descending, page 1 (size 3)
     Pageable pageable = PageRequest.of(1, 3, Sort.by("rating").descending());
-    Page<Review> reviewPage = reviewRepository.findByHotelId("HOTEL001", pageable);
+    Page<Review> reviewPage = reviewRepository.findByHotelId(1, pageable);
 
     // Then
     assertThat(reviewPage.getContent()).hasSize(3);

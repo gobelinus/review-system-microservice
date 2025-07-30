@@ -30,16 +30,19 @@ spring:
 
 logging:
   level:
-    org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration: DEBUG
-    com.zaxxer.hikari: DEBUG
-    org.springframework.boot.context.config.ConfigDataEnvironment: DEBUG
-    org.springframework.boot.autoconfigure: DEBUG
-    org.springframework.core.env: DEBUG
+    # org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration: DEBUG
+    # com.zaxxer.hikari: DEBUG
+    # org.springframework.boot.context.config.ConfigDataEnvironment: DEBUG
+    # org.springframework.boot.autoconfigure: DEBUG
+    # org.springframework.core.env: DEBUG
     com.reviewsystem: DEBUG
-    org.springframework.orm.jpa: DEBUG
+    # org.springframework.orm.jpa: DEBUG
     org.springframework.transaction: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # org.hibernate.SQL: DEBUG
+    # org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.scheduling: DEBUG
+    org.apache.coyote.http11: DEBUG
+
 
 # S3 configuration (for testing with LocalStack)
 aws:

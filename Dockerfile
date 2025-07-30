@@ -127,4 +127,4 @@ CMD java $JAVA_OPTS \
 LABEL maintainer="Review System Team" \
       version="1.0.0" \
       description="Review System Microservice for processing hotel reviews" \
-      org.opencontainers.image.source="https://github.com/company/review-system-microservice"
+      org.opencontainers.image.source="https://github.com/gobelinus/review-system-microservice"

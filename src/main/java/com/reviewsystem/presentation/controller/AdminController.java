@@ -501,6 +501,7 @@ public class AdminController {
     }
   }
 
+  /* ToDo: Enable this after enabling cache
   @PostMapping("/cache/clear")
   @PreAuthorize("hasRole('ADMIN')")
   @Operation(summary = "Clear application caches")
@@ -529,6 +530,7 @@ public class AdminController {
 
     return ResponseEntity.ok(ApiResponse.success(null, "Caches cleared successfully"));
   }
+  */
 
   @GetMapping("/providers/status")
   @PreAuthorize("hasRole('ADMIN')")

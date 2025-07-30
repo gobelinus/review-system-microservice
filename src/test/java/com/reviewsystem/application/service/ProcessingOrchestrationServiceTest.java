@@ -8,10 +8,10 @@ import static org.mockito.Mockito.*;
 
 import com.reviewsystem.common.enums.ProcessingStatus;
 import com.reviewsystem.domain.repository.ProcessedFileRepository;
-import com.reviewsystem.domain.repository.ProcessingJobRepository;
 import com.reviewsystem.domain.service.FileTrackingService;
 import com.reviewsystem.infrastructure.aws.S3Service;
 import com.reviewsystem.infrastructure.monitoring.ProcessingMetrics;
+import com.reviewsystem.repository.ProcessingJobRepository;
 import com.reviewsystem.repository.ReviewRepository;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -26,7 +26,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.CacheManager;
 import org.springframework.test.context.ActiveProfiles;
 import software.amazon.awssdk.services.s3.model.S3Object;
 
@@ -49,7 +48,8 @@ class ProcessingOrchestrationServiceTest {
 
   @Mock private ProcessingJobRepository processingJobRepository;
 
-  @Mock private CacheManager cacheManager;
+  // ToDO: Enable mock for cachemanager testing
+  // @Mock private CacheManager cacheManager;
 
   private ProcessingOrchestrationService orchestrationService;
 
@@ -83,8 +83,9 @@ class ProcessingOrchestrationServiceTest {
             processingMetrics,
             processedFileRepository,
             reviewRepository,
-            processingJobRepository,
-            cacheManager);
+            processingJobRepository
+            // cacheManager
+            );
     // (fileTrackingService, testMaxConcurrentFiles);
     // orchestrationService.setMaxConcurrentFiles(testMaxConcurrentFiles);
   }

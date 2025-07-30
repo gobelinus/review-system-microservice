@@ -57,7 +57,7 @@ public interface ProcessedFileRepository {
   long countByProcessingCompletedAtBefore(LocalDateTime dateTime);
 
   /** Count files by status and before cutoff */
-  long countByStatusAndProcessingCompletedAtBefore(
+  long countByProcessingStatusAndProcessingCompletedAtBefore(
       ProcessingStatus status, LocalDateTime startTime);
 
   /** Count files by provider and status */

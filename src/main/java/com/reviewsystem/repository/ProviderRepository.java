@@ -1,6 +1,5 @@
 package com.reviewsystem.repository;
 
-import com.reviewsystem.common.enums.ProviderType;
 import com.reviewsystem.domain.entity.Provider;
 import java.util.List;
 import java.util.Optional;
@@ -25,35 +24,18 @@ public interface ProviderRepository extends JpaRepository<Provider, Long> {
   /** Find provider by name (case-sensitive) */
   Optional<Provider> findByName(String name);
 
-  /** Find provider by name (case-insensitive) */
-  @Query("SELECT p FROM provider p WHERE LOWER(p.name) = LOWER(:name)")
-  Optional<Provider> findByNameIgnoreCase(@Param("name") String name);
-
-  /** Find provider by type */
-  Optional<Provider> findByType(ProviderType type);
-
-  /** Find all providers by type */
-  List<Provider> findAllByType(ProviderType type);
-
   /** Check if provider exists by name */
   boolean existsByName(String name);
 
-  /** Check if provider exists by type */
-  boolean existsByType(ProviderType type);
-
-  /** Find all active providers */
-  @Query("SELECT p FROM provider p WHERE p.isActive = true")
-  List<Provider> findAllActive();
-
   /** Count total providers */
-  @Query("SELECT COUNT(p) FROM provider p")
-  Long countAllproviders();
+  @Query("SELECT COUNT(p) FROM Provider p")
+  Long countAllProviders();
 
   /** Count active providers */
-  @Query("SELECT COUNT(p) FROM provider p WHERE p.isActive = true")
-  Long countActiveproviders();
+  @Query("SELECT COUNT(p) FROM Provider p WHERE p.active = true")
+  Long countActiveProviders();
 
   /** Find provider by external ID (if applicable) */
-  @Query("SELECT p FROM provider p WHERE p.externalId = :externalId")
+  @Query("SELECT p FROM Provider p WHERE p.externalId = :externalId")
   Optional<Provider> findByExternalId(@Param("externalId") String externalId);
 }

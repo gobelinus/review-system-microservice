@@ -14,13 +14,12 @@ import org.springframework.data.repository.query.Param;
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
   // Basic finder methods
-  Optional<Review> findByExternalIdAndProvider(String externalId, Provider provider);
+  Optional<Review> findByProviderExternalIdAndProvider(
+      String providerExternalId, Provider provider);
 
-  boolean existsByExternalIdAndProvider(String externalId, Provider provider);
+  boolean existsByProviderExternalIdAndProvider(String providerExternalId, Provider provider);
 
-  List<Review> findByHotelId(String hotelId);
-
-  Page<Review> findByHotelId(String hotelId, Pageable pageable);
+  Page<Review> findByHotelId(Integer hotelId, Pageable pageable);
 
   List<Review> findByProvider(Provider provider);
 
@@ -38,10 +37,10 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
       LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 
   // Language-based queries
-  List<Review> findByLanguage(String translateSource);
+  List<Review> findByTranslateSource(String translateSource);
 
-  // Verification status
-  List<Review> findByVerified(Boolean verified);
+  // Reviewer -based queries
+  List<Review> findByReviewerDisplayName(String reviewerDisplayName);
 
   // Custom JPQL queries
   @Query("SELECT r FROM Review r WHERE r.hotelId = :hotelId AND r.rating >= :minRating")
@@ -83,7 +82,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
   boolean existsByProviderExternalId(String providerExternalId);
 
   /** Check if a review exists by provider review ID to prevent duplicates */
-  boolean existsByProviderReviewId(String reviewerId);
+  boolean existsByProviderReviews(Review review);
 
   /** Find reviews by hotel ID */
   List<Review> findByHotelId(Integer hotelId);
@@ -123,9 +122,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
   /** Find reviews with rating above threshold */
   @Query("SELECT r FROM Review r WHERE r.rating > :threshold ORDER BY r.rating DESC")
   List<Review> findHighRatedReviews(@Param("threshold") Double threshold);
-
-  /** Delete reviews by provider review ID */
-  void deleteByProviderReviewId(String hotelReviewId);
 
   /** Find duplicate reviews based on hotel ID and review content hash */
   @Query("SELECT r FROM Review r WHERE r.hotelId = :hotelId AND r.contentHash = :contentHash")

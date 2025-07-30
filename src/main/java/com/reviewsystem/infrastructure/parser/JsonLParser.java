@@ -34,7 +34,7 @@ public class JsonLParser {
 
       return RawReviewData.builder()
           .hotelId(getIntegerValue(rootNode, "hotelId"))
-          .provider(getStringValue(rootNode, "provider"))
+          .provider(getStringValue(rootNode, "platform"))
           .hotelName(getStringValue(rootNode, "hotelName"))
           .comment(parseCommentSection(rootNode.get("comment")))
           .overallByproviders(parseOverallByproviders(rootNode.get("overallByproviders")))

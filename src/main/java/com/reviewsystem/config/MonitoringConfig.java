@@ -38,10 +38,10 @@ public class MonitoringConfig {
         .percentilesHistogram(true)
         .percentiles(0.5, 0.95, 0.99)
         .sla(
-            Duration.ofMillis(100).getSeconds(),
-            Duration.ofMillis(500).getSeconds(),
-            Duration.ofSeconds(1).getSeconds())
-        .minimumExpectedValue(Duration.ofMillis(1).getSeconds())
+            Duration.ofMillis(100).toMillis(),
+            Duration.ofMillis(500).toMillis(),
+            Duration.ofSeconds(1).toMillis())
+        .minimumExpectedValue(0.01)
         .maximumExpectedValue(Duration.ofSeconds(30).getSeconds())
         .build();
   }

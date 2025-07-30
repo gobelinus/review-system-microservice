@@ -1,4 +1,4 @@
-package com.reviewsystem.domain.repository;
+package com.reviewsystem.repository;
 
 import com.reviewsystem.common.enums.ProcessingStatus;
 import com.reviewsystem.common.enums.ProviderType;

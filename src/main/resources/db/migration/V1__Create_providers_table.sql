@@ -14,15 +14,15 @@ CREATE TABLE provider (
 
 -- Insert default providers
 INSERT INTO provider (name, code, provider_type, external_id, is_active) VALUES
-('Agoda.com', 'Agoda', 'HOTEL_BOOKING', 332, true),
-('Booking.com', 'Booking', 'HOTEL_BOOKING', 333, true),
-('Expedia.com', 'Expedia', 'HOTEL_BOOKING', 334, true);
+('Agoda', 'Agoda', 'HOTEL_BOOKING', 332, true),
+('Booking', 'Booking', 'HOTEL_BOOKING', 333, true),
+('Expedia', 'Expedia', 'HOTEL_BOOKING', 334, true);
 
 -- Create index for provider lookups
 CREATE INDEX idx_provider_code ON provider(code);
 CREATE INDEX idx_provider_external_id ON provider(external_id);
 
 -- Add comments
-COMMENT ON TABLE provider IS 'Stores information about review providers like Agoda, Booking.com, etc.';
+COMMENT ON TABLE provider IS 'Stores information about review providers like Agoda, Booking, etc.';
 COMMENT ON COLUMN provider.external_id IS 'External provider ID from the JSON data';
 COMMENT ON COLUMN provider.provider_type IS 'Type of provider (HOTEL_BOOKING, FLIGHT, etc.)';

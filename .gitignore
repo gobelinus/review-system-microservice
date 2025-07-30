@@ -106,3 +106,10 @@ build/
 
 ### Default files ###
 HELP.md
+
+.env.local
+Dockerfile.builder
+Makefile
+docker/localstack/init/
+docker/postgres/init/
+docs/01_Reset_DB.md

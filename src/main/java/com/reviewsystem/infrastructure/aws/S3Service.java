@@ -96,7 +96,7 @@ public class S3Service {
   @Retryable(
       retryFor = {SdkException.class},
       maxAttempts = 4, // initial + 3 retries
-      backoff = @Backoff(delayExpression = "#{@s3Config.retryDelayMs}", multiplier = 2.0))
+      backoff = @Backoff(delayExpression = "#{@s3Config.retryDelaySeconds}", multiplier = 2.0))
   public InputStream downloadFile(String fileKey) {
     validateFileKey(fileKey);
 

@@ -42,7 +42,7 @@ public class SchedulingConfig {
   }
 
   /**
-   * Lock registry for distributed locking. In production, this should be replaced with a
+   * ToDo: Lock registry for distributed locking. In production, this should be replaced with a
    * distributed lock registry (Redis, Zookeeper, etc.)
    */
   @Bean

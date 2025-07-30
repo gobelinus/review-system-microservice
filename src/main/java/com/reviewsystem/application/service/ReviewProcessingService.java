@@ -16,6 +16,8 @@ import com.reviewsystem.presentation.exception.FileProcessingException;
 import com.reviewsystem.repository.ProviderRepository;
 import com.reviewsystem.repository.ReviewRepository;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 @Slf4j
 @Service
@@ -288,6 +291,22 @@ public class ReviewProcessingService {
         .totalProviders(totalProviders)
         .cacheSize(providerCache.size())
         .build();
+  }
+
+  /**
+   * Processes a single new file from S3 and stores the reviews in the database.
+   *
+   * @param s3Object The S3 object to process
+   * @return Number of reviews processed from the file
+   */
+  @Transactional
+  public Long processNewFile(S3Object s3Object) {
+    // create a new record and then process this file
+    // convert instant time to localdatetime as s3 gives time in time.Instant format
+    LocalDateTime lastModified = s3Object.lastModified().atZone(ZoneId.of("UTC")).toLocalDateTime();
+    fileTrackingService.createFileTrackingRecord(
+        s3Object.key(), s3Object.eTag(), s3Object.size(), lastModified, null);
+    return processFile(s3Object.key());
   }
 
   /**
