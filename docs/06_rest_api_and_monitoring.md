@@ -133,7 +133,7 @@ curl http://localhost:8080/actuator/health
 ### Running Tests
 
 ```bash
-# Run all Module 6 tests
+# Run all Module tests
 mvn test -Dtest="*Controller*Test,*HealthIndicator*Test,*MetricsCollector*Test,*MonitoringEndpointSecurity*Test"
 
 # Run specific test classes
@@ -285,78 +285,3 @@ Log files are stored in:
 | Metrics | ❌ | ❌ | ✅ | ✅ |
 | Management | ❌ | ❌ | ❌ | ✅ |
 
-## 🎯 Performance Characteristics
-
-### API Response Times (Target SLAs)
-
-- **Review Queries**: < 200ms (95th percentile)
-- **Search Operations**: < 500ms (95th percentile)
-- **Statistics**: < 1s (95th percentile)
-- **Health Checks**: < 100ms (95th percentile)
-
-### Scalability Features
-
-1. **Pagination**: All list endpoints support pagination
-2. **Filtering**: Comprehensive filtering options
-3. **Caching**: Metrics and statistics caching
-4. **Async Logging**: Non-blocking log operations
-5. **Connection Pooling**: Optimized database connections
-
-## 🚨 Troubleshooting
-
-### Common Issues
-
-1. **Health Check Failures**
-```bash
-# Check specific health indicator
-curl -s http://localhost:8080/actuator/health/s3 | jq
-
-# Check application logs
-tail -f logs/review-system.log | grep -i health
-```
-
-2. **Performance Issues**
-```bash
-# Monitor metrics
-curl -s http://localhost:8080/actuator/metrics/api.request.duration | jq
-
-# Check database performance
-curl -s http://localhost:8080/actuator/metrics/database.query.duration | jq
-```
-
-3. **Authentication Issues**
-```bash
-# Verify endpoint security
-curl -I http://localhost:8080/api/v1/admin/health
-# Should return 401 Unauthorized without proper authentication
-```
-
-### Log Analysis
-
-```bash
-# Monitor API access patterns
-tail -f logs/review-system-api.log
-
-# Track processing operations
-tail -f logs/review-system-processing.log
-
-# Monitor errors
-tail -f logs/review-system-error.log
-```
-
-## 📝 Next Steps
-
-After Module 6 completion:
-
-1. **Integration Testing**: Verify end-to-end functionality
-2. **Performance Testing**: Load testing with realistic data volumes
-3. **Security Audit**: Comprehensive security review
-4. **Documentation**: Complete API documentation with OpenAPI/Swagger
-5. **Deployment**: Production deployment configuration
-
-## 📖 Additional Resources
-
-- [Spring Boot Actuator Documentation](https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html)
-- [Micrometer Metrics Documentation](https://micrometer.io/docs)
-- [Spring Security Reference](https://docs.spring.io/spring-security/reference/)
-- [Logback Configuration Guide](http://logback.qos.ch/manual/configuration.html)
